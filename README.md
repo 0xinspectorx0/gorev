@@ -13,6 +13,10 @@ KPSS Lisans hazırlığı için **Tarih, Coğrafya ve Vatandaşlık** derslerini
 - **Liste / Takvim görünümü** ve **mobilde tek sütuna düşen** responsive tablo.
 - **Yazdırma dostu** (Ctrl/Cmd + P).
 
+## 🔗 Canlı Site
+
+**https://0xinspectorx0.github.io/gorev/**
+
 ## 🚀 Kullanım
 
 Kurulum gerekmez:
@@ -29,7 +33,7 @@ Repo ayarlarından: **Settings → Pages → Source: Deploy from a branch → Br
 Birkaç dakika sonra site şu adreste yayında olur:
 
 ```
-https://KULLANICI_ADI.github.io/REPO_ADI/
+https://0xinspectorx0.github.io/gorev/
 ```
 
 ## 🗂️ Proje yapısı
