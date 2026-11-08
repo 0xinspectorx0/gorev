@@ -15,3 +15,6 @@ npm-debug.log*
 .cache/
 dist/
 node_modules/
+
+# npm önbelleği (kazara commitlenmesin)
+.npm/
