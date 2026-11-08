@@ -83,7 +83,7 @@
   .calendar-task:hover{filter:brightness(.96)}
   .calendar-task .task-check{grid-row:1/3;width:15px;height:15px;border:1.5px solid #bbb4a8;border-radius:5px;display:grid;place-items:center;font-size:10px;color:#fff;background:#fff}
   .calendar-task.done .task-check{background:var(--ok);border-color:var(--ok)}
-  .calendar-task .task-label{font-weight:800;font-size:10px;color:var(--task-color,var(--accent))}
+  .calendar-task .task-label{font-weight:800;font-size:10px;line-height:1.25;color:var(--task-color,var(--accent));overflow-wrap:anywhere}
   .calendar-task .task-copy{grid-column:2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;color:#3f4652}
   .calendar-task.done .task-copy{text-decoration:line-through;color:var(--muted)}
   .calendar-task.review-task{grid-template-rows:1fr;align-items:center}
@@ -111,6 +111,9 @@
   .topic-badge{color:var(--accent)}
   .review-badge{color:#596579}
   .task-row .t{font-size:13px;line-height:1.4}
+  .task-row .t-unit{display:block;font-weight:800;color:#1f2937}
+  .task-row .t-sub{display:block;margin-top:1px;color:#4b5563}
+  .task-row.done .t-unit,.task-row.done .t-sub{color:var(--muted)}
   .task-row.done .t{text-decoration:line-through;color:var(--muted)}
   .task-row.review-row.done .task-badge{text-decoration:line-through;color:var(--muted)}
   @media(max-width:760px){
@@ -749,7 +752,8 @@ function tasksHTML(item){
     const unit=curUnits()[item.ui]||CUSTOM_UNIT;
     return todayTask(item,"urev","🔁 "+REVIEW_TEXT,`${unit.name} ünite tekrarı + soru çözümü`);
   }
-  return todayTask(item,"topic","Konu",item.t)+todayTask(item,"review",REVIEW_TEXT);
+  const unit=curUnits()[item.ui]||CUSTOM_UNIT;
+  return todayTask(item,"topic","Konu: "+unit.name,item.t)+todayTask(item,"review",REVIEW_TEXT);
 }
 
 /* ---------- render ---------- */
@@ -830,7 +834,7 @@ function render(){
             <div class="day-head"><span class="g">${p.day}. Gün</span><span class="dt">${dayDate}</span></div>
             <div class="task-row${topicDone?" done":""}">
               <input type="checkbox" ${topicDone?"checked":""} aria-label="${p.day}. gün konu görevini tamamla" onchange="toggle('${p.doneId}','topic')">
-              <span class="task-badge topic-badge">📘 Konu</span><span class="t">${escapeHTML(p.t)}</span>
+              <span class="task-badge topic-badge">📘</span><span class="t"><b class="t-unit">Konu: ${escapeHTML(u.name)}</b><span class="t-sub">${escapeHTML(p.t)}</span></span>
               <span class="row-actions">
                 <button type="button" class="mini" title="Bir gün öne al" onclick="moveBy('${p.id}',-1)">↑</button>
                 <button type="button" class="mini" title="Bir gün geri al" onclick="moveBy('${p.id}',1)">↓</button>
@@ -879,7 +883,7 @@ function render(){
         const editHint=p.customId?`<span class="cal-edit" title="Düzenle" onclick="event.stopPropagation();openEditor('${p.id}')">✏️</span>`:"";
         html+=`<div class="cell${isToday}"${dropAttr}><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span><span class="dn">${p.day}. gün</span></div>
           <button type="button" draggable="true" class="calendar-task topic-task${topicDone?" done":""}" title="${escapeHTML(p.t)} — sürükleyerek başka güne taşı" aria-label="${escapeHTML(topicLabel)}" aria-pressed="${topicDone}" onclick="toggle('${p.doneId}','topic')" ondragstart="dragStart(event,'${p.id}')" ondragend="dragEnd()" style="--task-color:${unit.color};--task-bg:${unit.bg}">
-            <span class="task-check" aria-hidden="true">${topicDone?"✓":""}</span><span class="task-label">Konu${editHint}</span><span class="task-copy">${escapeHTML(p.t)}</span>
+            <span class="task-check" aria-hidden="true">${topicDone?"✓":""}</span><span class="task-label">Konu: ${escapeHTML(unit.name)}${editHint}</span><span class="task-copy">${escapeHTML(p.t)}</span>
           </button>
           <button type="button" class="calendar-task review-task${reviewDone?" done":""}" title="${REVIEW_TEXT}" aria-label="${escapeHTML(reviewLabel)}" aria-pressed="${reviewDone}" onclick="toggle('${p.doneId}','review')" style="--task-color:var(--accent);--task-bg:#f7f8fa">
             <span class="task-check" aria-hidden="true">${reviewDone?"✓":""}</span><span class="task-label">${REVIEW_TEXT}</span>
