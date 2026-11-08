@@ -91,22 +91,6 @@
   .calendar-task.review-task.done .task-label{text-decoration:line-through;color:var(--muted)}
   .offtxt{font-size:11px;color:var(--muted);margin:auto;text-align:center}
 
-  /* Sequential lock */
-  .lock-note{margin-top:16px;border:1px solid #f0dcae;background:#fffaef;border-radius:12px;padding:11px 14px;font-size:13px;line-height:1.5;color:#6b5312;display:flex;gap:9px;flex-wrap:wrap;align-items:baseline}
-  .lock-note b{color:#4d3a06}
-  .lock-note .lk{font-size:11px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;background:#f6e4b6;color:#6b5312;padding:3px 8px;border-radius:99px;white-space:nowrap}
-  .lock-note.done{background:#effaf3;border-color:#bfe6cd;color:#1f6b43}
-  .lock-note.off-mode{background:#f4f6f9;border-color:#d8dee8;color:#46536b}
-  .lock-note.off-mode .lk{background:#e3e9f2;color:#46536b}
-  .lock-note.done .lk{background:#cdefdb;color:#1f6b43}
-  .locked{opacity:.55}
-  .calendar-task.locked{border-style:dashed;cursor:not-allowed;filter:grayscale(.35)}
-  .calendar-task.locked:hover{filter:grayscale(.35)}
-  .task-row.locked{opacity:.6}
-  .task-row.locked input{cursor:not-allowed}
-  .today-task.locked{cursor:not-allowed}
-  .today-task.locked:hover{border-color:var(--line);transform:none}
-  .lock-tag{font-size:10px;font-weight:800;color:#8a6d1f;margin-right:4px}
 
   /* List */
   .list{background:var(--card);border-radius:16px;margin:18px 0;overflow:hidden;box-shadow:0 4px 16px rgba(60,30,10,.05)}
@@ -187,7 +171,7 @@
 <header data-subject="tarih" id="hero">
   <div class="wrap">
     <h1 id="heroTitle">📜 KPSS Lisans Tarih Çalışma Takvimi</h1>
-    <p id="heroSub">Her gün 1 konu + 1 tekrar görevi · Sıralı kilit: tekrar bitmeden sonraki konu açılmaz</p>
+    <p id="heroSub">Her gün 1 konu + 1 tekrar görevi</p>
   </div>
 </header>
 
@@ -203,7 +187,6 @@
         <input type="date" id="start">
       </label>
       <label class="chk"><input type="checkbox" id="sunday"> Pazar günleri dinlenme</label>
-      <label class="chk"><input type="checkbox" id="strict" checked> 🔒 Sıralı kilit</label>
       <button class="btn" id="todayBtn">Bugünden başlat</button>
       <button class="btn" id="reset">İlerlemeyi sıfırla</button>
       <button class="btn primary" onclick="window.print()">🖨️ Yazdır</button>
@@ -219,20 +202,19 @@
       <div class="stat"><b id="sPct">%0</b><span>İlerleme</span></div>
     </div>
     <div class="bar"><i id="bar"></i></div>
-    <div class="lock-note" id="lockNote" role="status" aria-live="polite"></div>
     <div class="today-card" id="todayCard"></div>
   </section>
 
   <div class="legend" id="legend"></div>
   <main id="view"></main>
-  <footer>🔒 Sıralı ilerleme: bir konuyu bitirmeden o konunun <b>Tekrar + Soru</b> görevi, tekrarı bitirmeden de sonraki konu açılmaz. Her dersin ilerlemesi tarayıcında ayrı saklanır.</footer>
+  <footer>İpucu: Konu ve Tekrar + Soru görevlerini istediğin sırada, ayrı ayrı tamamlandı olarak işaretleyebilirsin. Her dersin ilerlemesi tarayıcında ayrı saklanır.</footer>
 </div>
 
 <script>
 const SUBJECTS = {
 tarih: {
   title: "📜 KPSS Lisans Tarih Çalışma Takvimi",
-  sub: "Her gün 1 konu + 1 tekrar görevi · Konu → Tekrar + Soru → sonraki konu (kilitli sıra)",
+  sub: "Her gün 1 konu + 1 tekrar görevi",
   units: [
   {name:"İslamiyet Öncesi Türk Tarihi", color:"#8a5a2b", bg:"#f5ebe0", topics:[
     "Türklerin ana yurdu, göçler ve ilk kültür merkezleri (Anav, Afanasyevo, Andronovo, Karasuk, Tagar)",
@@ -318,7 +300,7 @@ tarih: {
 },
 cografya: {
   title: "🗺️ KPSS Lisans Coğrafya Çalışma Takvimi",
-  sub: "Her gün 1 konu + 1 tekrar görevi · Konu → Tekrar + Soru → sonraki konu (kilitli sıra)",
+  sub: "Her gün 1 konu + 1 tekrar görevi",
   units: [
   {name:"Coğrafyanın Temelleri", color:"#1d4e89", bg:"#e2ecf8", topics:[
     "Coğrafyanın bölümleri, paralel ve meridyenler (matematik konum)",
@@ -379,7 +361,7 @@ cografya: {
 },
 vatandaslik: {
   title: "⚖️ KPSS Lisans Vatandaşlık Çalışma Takvimi",
-  sub: "Her gün 1 konu + 1 tekrar görevi · Konu → Tekrar + Soru → sonraki konu (kilitli sıra)",
+  sub: "Her gün 1 konu + 1 tekrar görevi",
   units: [
     {name:"Hukukun Temel Kavramları", color:"#6852b8", bg:"#eee9ff", topics:[
       "Toplumsal düzen kuralları: hukuk, din, ahlak ve görgü kuralları; yaptırımlar",
@@ -478,8 +460,7 @@ function normalizePlan(plan){
     else if(/^\d+$/.test(key)) done[`topic:${key}`]=true;
   });
   const start=plan && /^\d{4}-\d{2}-\d{2}$/.test(plan.start||"") ? plan.start : todayIso;
-  const strict=!(plan && plan.strict===false);
-  return {start,sunday:!!(plan && plan.sunday),strict,done};
+  return {start,sunday:!!(plan && plan.sunday),done};
 }
 
 function loadState(){
@@ -513,31 +494,6 @@ const curPlan=()=>state.plans[state.subject];
 const curUnits=()=>SUBJECTS[state.subject].units;
 const isDone=(plan,type,day)=>!!plan.done[`${type}:${day}`];
 
-/* --- Sıralı kilit:  konu -> aynı konunun tekrarı -> sonraki konu --- */
-const topicCount=()=>flatTopics(state.subject).length;
-function isUnlocked(plan,type,day){
-  if(plan.strict===false) return true;
-  if(type==="topic") return day<=1 || !!plan.done[`review:${day-1}`];
-  return !!plan.done[`topic:${day}`];
-}
-function blockMsg(plan,type,day){
-  const t=flatTopics(state.subject);
-  if(type==="topic"){
-    if(day>1 && !plan.done[`review:${day-1}`]) return `${day-1}. konunun Tekrar + Soru görevi bitmeden ${day}. konuya geçilmez`;
-    return "";
-  }
-  if(!plan.done[`topic:${day}`]) return `${day}. konu tamamlanmadan tekrar yapılmaz`;
-  return "";
-}
-let _flashTimer=null;
-function flashLock(msg){
-  const el=$("#lockNote"); if(!el) return;
-  el.className="lock-note warn";
-  el.innerHTML=`<span class="lk">🔒 Kilitli</span><span>${escapeHTML(msg||"Önce sıradaki görevi bitir")}.</span>`;
-  clearTimeout(_flashTimer);
-  _flashTimer=setTimeout(render,2200);
-}
-
 function schedule(){
   const topics=flatTopics(state.subject), plan=curPlan();
   const res=[]; let d=parse(plan.start);
@@ -551,18 +507,15 @@ function schedule(){
 function toggle(day,type="topic"){
   if(type!=="topic" && type!=="review") return;
   const p=curPlan(), key=`${type}:${day}`;
-  if(!p.done[key] && !isUnlocked(p,type,day)){ flashLock(blockMsg(p,type,day)); return; }
   p.done[key]=!p.done[key]; save(); render();
 }
 
 function todayTask(item,type,label,description=""){
-  const plan=curPlan(), done=isDone(plan,type,item.day), unlocked=isUnlocked(plan,type,item.day);
-  const lockMsg=unlocked?"":blockMsg(plan,type,item.day);
-  const accessible=(done?"Tamamlandı: ":(unlocked?"":"Kilitli: "))+(description ? `${label}: ${description}` : label);
-  const action=unlocked?`onclick="toggle(${item.day},'${type}')"`:`data-lock="${escapeHTML(lockMsg)}" onclick="flashLock(this.dataset.lock)"`;
-  return `<button type="button" class="today-task${done?" done":""}${unlocked?"":" locked"}" aria-pressed="${done}" aria-disabled="${!unlocked}" aria-label="${escapeHTML(accessible)}" ${action}>
-    <span class="task-check" aria-hidden="true">${done?"✓":(unlocked?"":"🔒")}</span>
-    <span class="task-info"><b>${escapeHTML(label)}</b>${description?`<span class="task-copy">${escapeHTML(description)}</span>`:""}${unlocked?"":`<span class="task-copy" style="color:#8a6d1f;font-size:11px">🔒 ${escapeHTML(lockMsg)}</span>`}</span>
+  const done=isDone(curPlan(),type,item.day);
+  const accessible=description ? `${label}: ${description}` : label;
+  return `<button type="button" class="today-task${done?" done":""}" aria-pressed="${done}" aria-label="${escapeHTML(accessible)}" onclick="toggle(${item.day},'${type}')">
+    <span class="task-check" aria-hidden="true">${done?"✓":""}</span>
+    <span class="task-info"><b>${escapeHTML(label)}</b>${description?`<span class="task-copy">${escapeHTML(description)}</span>`:""}</span>
   </button>`;
 }
 
@@ -581,7 +534,7 @@ function render(){
     b.classList.toggle("active",active); b.setAttribute("aria-selected",String(active));
   });
 
-  $("#start").value=plan.start; $("#sunday").checked=plan.sunday; $("#strict").checked=plan.strict!==false;
+  $("#start").value=plan.start; $("#sunday").checked=plan.sunday;
   document.querySelectorAll(".tabs .btn").forEach(b=>{
     const active=b.dataset.view===state.view;
     b.classList.toggle("active",active); b.setAttribute("aria-pressed",String(active));
@@ -593,25 +546,6 @@ function render(){
   $("#sEnd").textContent=sched.length ? fmt(parse(sched[sched.length-1].date),{day:"numeric",month:"short",year:"numeric"}) : "-";
   const pct=total?Math.round(done/total*100):0;
   $("#sPct").textContent="%"+pct; $("#bar").style.width=pct+"%";
-
-  /* --- sıralı kilit durum kutusu --- */
-  const firstUndone=sched.find(p=>!isDone(plan,"topic",p.day)||!isDone(plan,"review",p.day));
-  const lockEl=$("#lockNote");
-  if(plan.strict===false){
-    lockEl.className="lock-note off-mode";
-    lockEl.innerHTML=`<span class="lk">Kilit kapalı</span><span>Sıralı kilit kapalı — konu ve Tekrar + Soru görevlerini istediğin sırada işaretleyebilirsin.</span>`;
-  }else if(!firstUndone){
-    lockEl.className="lock-note done";
-    lockEl.innerHTML=`<span class="lk">Tamam ✓</span><span>Bu dersin tüm konuları ve tekrarları bitti. 🎉</span>`;
-  }else{
-    const g=firstUndone, gTopic=flatTopics(subj)[g.day-1].t;
-    lockEl.className="lock-note";
-    if(!isDone(plan,"topic",g.day)){
-      lockEl.innerHTML=`<span class="lk">🔒 Sıralı ilerleme</span><span>Sıradaki adım: <b>${g.day}. konu</b> · ${escapeHTML(UNITS[g.ui].name)} — “${escapeHTML(gTopic)}”. Bu konu ve tekrarı bitmeden <b>${g.day+1<=topicCount()?`${g.day+1}. konu`:"sıradaki konu"}</b> açılmaz.</span>`;
-    }else{
-      lockEl.innerHTML=`<span class="lk">🔒 Sıralı ilerleme</span><span>Sıradaki adım: <b>${g.day}. konunun Tekrar + Soru görevi</b> — “${escapeHTML(gTopic)}”. Bu tekrar bitmeden <b>${g.day+1<=topicCount()?`${g.day+1}. konu`:"yeni konu"}</b> açılmaz.</span>`;
-    }
-  }
 
   const tp=map[todayIso];
   const next=sched.find(p=>p.date>=todayIso && (!isDone(plan,"topic",p.day)||!isDone(plan,"review",p.day)))
@@ -635,18 +569,17 @@ function render(){
       return `<section class="list"><div class="unit-h" style="background:${u.color}"><span>${escapeHTML(u.name)}</span><small>${items.length} gün · ${items.length*2} görev</small></div>`+
         items.map(p=>{
           const topicDone=isDone(plan,"topic",p.day), reviewDone=isDone(plan,"review",p.day);
-          const topicOpen=isUnlocked(plan,"topic",p.day), reviewOpen=isUnlocked(plan,"review",p.day);
           const dayDate=escapeHTML(fmt(parse(p.date),{day:"numeric",month:"long",weekday:"short"}));
           const revTitle=`${p.day}. konu tekrarı: ${p.t}`;
           return `<article class="day-group${p.date===todayIso?" today":""}">
             <div class="day-head"><span class="g">${p.day}. Gün</span><span class="dt">${dayDate}</span></div>
-            <label class="task-row${topicDone?" done":""}${topicOpen?"":" locked"}" title="${topicOpen?"":escapeHTML(blockMsg(plan,"topic",p.day))}">
-              <input type="checkbox" ${topicDone?"checked":""} ${topicOpen?"":"disabled"} aria-disabled="${!topicOpen}" aria-label="${p.day}. gün konu görevini tamamla" onchange="toggle(${p.day},'topic')">
-              <span class="task-badge topic-badge">${topicOpen?"📘":"🔒"} Konu</span><span class="t">${escapeHTML(p.t)}</span>
+            <label class="task-row${topicDone?" done":""}">
+              <input type="checkbox" ${topicDone?"checked":""} aria-label="${p.day}. gün konu görevini tamamla" onchange="toggle(${p.day},'topic')">
+              <span class="task-badge topic-badge">📘 Konu</span><span class="t">${escapeHTML(p.t)}</span>
             </label>
-            <label class="task-row review-row${reviewDone?" done":""}${reviewOpen?"":" locked"}" title="${reviewOpen?"":escapeHTML(blockMsg(plan,"review",p.day))}">
-              <input type="checkbox" ${reviewDone?"checked":""} ${reviewOpen?"":"disabled"} aria-disabled="${!reviewOpen}" aria-label="${p.day}. gün Tekrar + Soru görevini tamamla" onchange="toggle(${p.day},'review')">
-              <span class="task-badge review-badge">${reviewOpen?"🔁":"🔒"} ${REVIEW_TEXT}</span><span class="t" style="color:#596579">${escapeHTML(revTitle)}</span>
+            <label class="task-row review-row${reviewDone?" done":""}">
+              <input type="checkbox" ${reviewDone?"checked":""} aria-label="${p.day}. gün Tekrar + Soru görevini tamamla" onchange="toggle(${p.day},'review')">
+              <span class="task-badge review-badge">🔁 ${REVIEW_TEXT}</span><span class="t" style="color:#596579">${escapeHTML(revTitle)}</span>
             </label>
           </article>`;
         }).join("")+`</section>`;
@@ -672,15 +605,12 @@ function render(){
         const topicDone=isDone(plan,"topic",p.day), reviewDone=isDone(plan,"review",p.day);
         const topicLabel=`${p.day}. gün konu görevi: ${p.t}`;
         const reviewLabel=`${p.day}. gün Tekrar + Soru görevi`;
-        const topicOpen=isUnlocked(plan,"topic",p.day), reviewOpen=isUnlocked(plan,"review",p.day);
-        const topicAction=topicOpen?`onclick="toggle(${p.day},'topic')"`:`data-lock="${escapeHTML(blockMsg(plan,"topic",p.day))}" onclick="flashLock(this.dataset.lock)"`;
-        const reviewAction=reviewOpen?`onclick="toggle(${p.day},'review')"`:`data-lock="${escapeHTML(blockMsg(plan,"review",p.day))}" onclick="flashLock(this.dataset.lock)"`;
         html+=`<div class="cell${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span><span class="dn">${p.day}. gün</span></div>
-          <button type="button" class="calendar-task topic-task${topicDone?" done":""}${topicOpen?"":" locked"}" title="${escapeHTML(topicOpen?p.t:`🔒 ${blockMsg(plan,"topic",p.day)}`)}" aria-label="${escapeHTML(topicLabel)}" aria-pressed="${topicDone}" aria-disabled="${!topicOpen}" ${topicAction} style="--task-color:${unit.color};--task-bg:${unit.bg}">
-            <span class="task-check" aria-hidden="true">${topicDone?"✓":(topicOpen?"":"🔒")}</span><span class="task-label">${topicOpen?"Konu":"Kilitli"}</span><span class="task-copy">${escapeHTML(p.t)}</span>
+          <button type="button" class="calendar-task topic-task${topicDone?" done":""}" title="${escapeHTML(p.t)}" aria-label="${escapeHTML(topicLabel)}" aria-pressed="${topicDone}" onclick="toggle(${p.day},'topic')" style="--task-color:${unit.color};--task-bg:${unit.bg}">
+            <span class="task-check" aria-hidden="true">${topicDone?"✓":""}</span><span class="task-label">Konu</span><span class="task-copy">${escapeHTML(p.t)}</span>
           </button>
-          <button type="button" class="calendar-task review-task${reviewDone?" done":""}${reviewOpen?"":" locked"}" title="${escapeHTML(reviewOpen?REVIEW_TEXT:`🔒 ${blockMsg(plan,"review",p.day)}`)}" aria-label="${escapeHTML(reviewLabel)}" aria-pressed="${reviewDone}" aria-disabled="${!reviewOpen}" ${reviewAction} style="--task-color:var(--accent);--task-bg:#f7f8fa">
-            <span class="task-check" aria-hidden="true">${reviewDone?"✓":(reviewOpen?"":"🔒")}</span><span class="task-label">${REVIEW_TEXT}</span>
+          <button type="button" class="calendar-task review-task${reviewDone?" done":""}" title="${REVIEW_TEXT}" aria-label="${escapeHTML(reviewLabel)}" aria-pressed="${reviewDone}" onclick="toggle(${p.day},'review')" style="--task-color:var(--accent);--task-bg:#f7f8fa">
+            <span class="task-check" aria-hidden="true">${reviewDone?"✓":""}</span><span class="task-label">${REVIEW_TEXT}</span>
           </button></div>`;
       }else if(inRange){
         html+=`<div class="cell off${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span></div><div class="offtxt">☕ Dinlenme</div></div>`;
@@ -697,7 +627,6 @@ function render(){
 document.querySelectorAll(".subj").forEach(b=>b.onclick=()=>{state.subject=b.dataset.subject;save();render();});
 $("#start").addEventListener("change",e=>{if(e.target.value){curPlan().start=e.target.value;save();render();}});
 $("#sunday").addEventListener("change",e=>{curPlan().sunday=e.target.checked;save();render();});
-$("#strict").addEventListener("change",e=>{const p=curPlan();p.strict=e.target.checked;save();render();});
 $("#todayBtn").onclick=()=>{curPlan().start=todayIso;save();render();};
 $("#reset").onclick=()=>{
   const names={tarih:"Tarih",cografya:"Coğrafya",vatandaslik:"Vatandaşlık"}, name=names[state.subject];
