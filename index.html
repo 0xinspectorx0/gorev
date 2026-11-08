@@ -104,10 +104,10 @@
   .day-head{display:flex;align-items:center;gap:12px;padding:3px 0 5px}
   .day-head .g{font-weight:800;color:var(--muted);font-size:12px}
   .day-head .dt{font-size:12px;color:var(--muted)}
-  .task-row{display:grid;grid-template-columns:24px 96px minmax(0,1fr);gap:9px;align-items:center;padding:6px 0;cursor:pointer}
+  .task-row{display:grid;grid-template-columns:24px 96px minmax(0,1fr) auto;gap:9px;align-items:center;padding:6px 0;cursor:default}
   .task-row input{width:17px;height:17px;margin:0;accent-color:var(--ok);cursor:pointer}
   .task-row .task-badge{font-size:11px;font-weight:800;white-space:nowrap}
-  .task-row.review-row{grid-template-columns:24px 96px minmax(0,1fr)}
+  .task-row.review-row{grid-template-columns:24px 96px minmax(0,1fr) auto}
   .topic-badge{color:var(--accent)}
   .review-badge{color:#596579}
   .task-row .t{font-size:13px;line-height:1.4}
@@ -132,8 +132,8 @@
     .calendar-task.review-task{grid-template-rows:auto;align-items:center}
     .calendar-task.review-task .task-check{grid-row:1}
     .day-group{padding-left:12px;padding-right:12px}
-    .task-row{grid-template-columns:20px 78px minmax(0,1fr);gap:7px}
-    .task-row.review-row{grid-template-columns:20px 78px minmax(0,1fr)}
+    .task-row{grid-template-columns:20px 78px minmax(0,1fr) auto;gap:7px}
+    .task-row.review-row{grid-template-columns:20px 78px minmax(0,1fr) auto}
     .task-row .t{font-size:12px}
     .tabs{margin-left:0}
   }
@@ -149,18 +149,41 @@
     .calendar-task .task-check{width:17px;height:17px}
     .calendar-task .task-copy{font-size:11px}
     .day-group{padding:7px 10px}
-    .task-row{grid-template-columns:20px 68px minmax(0,1fr);gap:5px}
+    .task-row{grid-template-columns:20px 64px minmax(0,1fr) auto;gap:5px}
     .task-row .task-badge{font-size:10px}
     .task-row .t{font-size:12px}
     .unit-h{padding:11px 12px;font-size:13px}
   }
+  /* Konu yönetimi */
+  .add-btn{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .add-btn:hover{color:#fff;filter:brightness(.92)}
+  .task-row .row-actions{display:flex;gap:3px;justify-content:flex-end;align-items:center}
+  .mini{border:1px solid var(--line);background:#fff;border-radius:7px;font:inherit;font-size:11px;line-height:1;padding:5px 6px;cursor:pointer;color:var(--ink)}
+  .mini:hover{border-color:var(--accent);color:var(--accent)}
+  .calendar-task[draggable="true"]{cursor:grab}
+  .calendar-task.dragging{opacity:.35}
+  .cell.dropok{outline:2px dashed var(--accent);outline-offset:-3px;background:#fffaf7}
+  body[data-subject="cografya"] .cell.dropok{background:#f0faf8}
+  body[data-subject="vatandaslik"] .cell.dropok{background:#f6f3ff}
+  .cal-edit{font-size:9px;margin-left:3px;cursor:pointer;opacity:.75}
+  /* Konu ekleme / düzenleme penceresi */
+  .modal{position:fixed;inset:0;background:rgba(24,17,12,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:80}
+  .modal.open{display:flex}
+  .modal-card{background:#fff;border-radius:16px;padding:20px;max-width:440px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.28);display:grid;gap:12px}
+  .modal-card h3{margin:0;font-size:18px}
+  .modal-card label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+  .modal-card input,.modal-card select{padding:9px 10px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:14px;color:var(--ink);width:100%;background:#fff}
+  .modal-card input.err{border-color:#c1121f;background:#fff5f5}
+  .modal-card .hint{margin:0;font-size:12px;color:var(--muted);line-height:1.45}
+  .modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+  .modal-actions #deleteTopic{color:#c1121f;border-color:#f0c9cb}
   footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 0 40px}
   @media print{
     header{padding:16px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     header[data-subject="tarih"]{background:#7a2418!important}
     header[data-subject="cografya"]{background:#083f3b!important}
     header[data-subject="vatandaslik"]{background:#35245f!important}
-    .controls,.tabs,.subj-tabs{display:none}
+    .controls,.tabs,.subj-tabs,.row-actions,.modal,.cal-edit{display:none!important}
     .panel{margin-top:0;box-shadow:none}
     .month{page-break-inside:avoid;box-shadow:none}
     *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -187,6 +210,7 @@
         <input type="date" id="start">
       </label>
       <label class="chk"><input type="checkbox" id="sunday"> Pazar günleri dinlenme</label>
+      <button class="btn add-btn" type="button" id="addTopic">＋ Konu ekle</button>
       <button class="btn" id="todayBtn">Bugünden başlat</button>
       <button class="btn" id="reset">İlerlemeyi sıfırla</button>
       <button class="btn primary" onclick="window.print()">🖨️ Yazdır</button>
@@ -207,7 +231,27 @@
 
   <div class="legend" id="legend"></div>
   <main id="view"></main>
-  <footer>İpucu: Konu ve Tekrar + Soru görevlerini istediğin sırada, ayrı ayrı tamamlandı olarak işaretleyebilirsin. Her dersin ilerlemesi tarayıcında ayrı saklanır.</footer>
+  <div class="modal" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle" data-mode="new">
+    <div class="modal-card">
+      <h3 id="editTitle">Yeni konu ekle</h3>
+      <label id="fTopicWrap">Konu adı
+        <input type="text" id="fTopic" maxlength="200" placeholder="Örn. KPSS deneme analizi ve yanlış defteri">
+      </label>
+      <label id="fUnitWrap">Ünite
+        <select id="fUnit"></select>
+      </label>
+      <label>Tarih (konu bu güne yerleşsin)
+        <input type="date" id="fDate">
+      </label>
+      <p class="hint">Konu seçtiğin güne girer, sonraki konular bir gün kayar. Kartı takvimde sürükleyerek de taşıyabilirsin.</p>
+      <div class="modal-actions">
+        <button class="btn primary" type="button" id="saveTopic">Kaydet</button>
+        <button class="btn" type="button" id="deleteTopic">Sil</button>
+        <button class="btn" type="button" id="cancelTopic">İptal</button>
+      </div>
+    </div>
+  </div>
+  <footer>İpucu: Takvimde bir konu kartını başka güne sürükleyebilir, “＋ Konu ekle” ile kendi konunu ekleyebilirsin. Liste görünümünde ↑ ↓ ve 📅 ile de taşınır. İlerleme ve eklediğin konular tarayıcında saklanır.</footer>
 </div>
 
 <script>
@@ -438,87 +482,248 @@ vatandaslik: {
 };
 
 const $ = s=>document.querySelector(s);
-const LS_NEW = "kpssPlan_v3";
-const LS_PREV = "kpssPlan_v2";
+const LS_NEW = "kpssPlan_v4";
+const LS_KEYS = ["kpssPlan_v4","kpssPlan_v3","kpssPlan_v2"];
 const LS_OLD = "kpssTarihPlan_v1";
 const REVIEW_TEXT = "Tekrar + Soru";
+const CUSTOM_UNIT = {name:"✏️ Kendi Konularım", color:"#4b5563", bg:"#eceff3"};
 const iso = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 const parse = s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
 const todayIso = iso(new Date());
 const fmt = (d,o)=>d.toLocaleDateString("tr-TR",o);
+const addDays=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
 const escapeHTML = value=>String(value).replace(/[&<>\x22\x27]/g,ch=>{if(ch==='&')return '&amp;';if(ch==='<')return '&lt;';if(ch==='>')return '&gt;';return ch.charCodeAt(0)===34?'&quot;':'&#39;';});
 
-function countTopics(sub){ return SUBJECTS[sub].units.reduce((a,u)=>a+u.topics.length,0); }
-function flatTopics(sub){ const a=[]; SUBJECTS[sub].units.forEach((u,ui)=>u.topics.forEach(t=>a.push({t,ui}))); return a; }
-
+/* ---------- plan modeli ---------- */
 function normalizePlan(plan){
+  const raw = plan && typeof plan==="object" ? plan : {};
   const done={};
-  const oldDone=plan && plan.done && typeof plan.done==="object" ? plan.done : {};
-  Object.entries(oldDone).forEach(([key,value])=>{
-    if(!value) return;
-    if(/^(topic|review):\d+$/.test(key)) done[key]=true;
-    else if(/^\d+$/.test(key)) done[`topic:${key}`]=true;
-  });
-  const start=plan && /^\d{4}-\d{2}-\d{2}$/.test(plan.start||"") ? plan.start : todayIso;
-  return {start,sunday:!!(plan && plan.sunday),done};
+  const oldDone = raw.done && typeof raw.done==="object" ? raw.done : {};
+  Object.entries(oldDone).forEach(([k,v])=>{ if(v) done[k]=true; });
+  const start = /^\d{4}-\d{2}-\d{2}$/.test(raw.start||"") ? raw.start : todayIso;
+  const order = Array.isArray(raw.order) ? raw.order.filter(x=>typeof x==="string") : [];
+  const custom = Array.isArray(raw.custom) ? raw.custom
+      .filter(c=>c && typeof c.id==="string" && typeof c.t==="string")
+      .map(c=>({id:c.id,t:c.t,ui:Number.isInteger(c.ui)?c.ui:null})) : [];
+  const seq = Number.isInteger(raw.seq) ? raw.seq : custom.length;
+  return {start,sunday:!!raw.sunday,done,order,custom,seq};
 }
-
+function baseUnits(subject){ return SUBJECTS[subject].units; }
+function unitsFor(subject,plan){ return baseUnits(subject).concat([CUSTOM_UNIT]); }
+function customUnitIndex(subject){ return baseUnits(subject).length; }
+function naturalTopics(subject,plan){
+  const out=[];
+  baseUnits(subject).forEach((u,ui)=>u.topics.forEach((t,ti)=>out.push({id:`b:${ui}:${ti}`,t,ui,customId:null})));
+  (plan.custom||[]).forEach(c=>out.push({id:c.id,t:c.t,ui:(c.ui==null?customUnitIndex(subject):c.ui),customId:c.id}));
+  return out;
+}
+function orderedTopics(subject,plan){
+  const all=naturalTopics(subject,plan);
+  const byId=new Map(all.map(x=>[x.id,x]));
+  const order=[];
+  (plan.order||[]).forEach(id=>{ if(byId.has(id) && !order.includes(id)) order.push(id); });
+  all.forEach(x=>{ if(!order.includes(x.id)) order.push(x.id); });
+  plan.order=order.slice();
+  return order.map(id=>byId.get(id));
+}
+function migrateDone(plan,subject){
+  const numeric=Object.keys(plan.done).filter(k=>/^(topic|review):\d+$/.test(k));
+  if(!numeric.length) return;
+  const natural=naturalTopics(subject,plan);
+  numeric.forEach(k=>{
+    const parts=k.split(":"), type=parts[0], num=parts[1];
+    const t=natural[Number(num)-1];
+    delete plan.done[k];
+    if(t) plan.done[`${type}:${t.id}`]=true;
+  });
+}
 function loadState(){
   let saved=null;
-  for(const key of [LS_NEW,LS_PREV]){
-    try{
-      const item=JSON.parse(localStorage.getItem(key));
-      if(item && item.plans){ saved=item; break; }
-    }catch(e){}
+  for(const key of LS_KEYS){
+    try{ const item=JSON.parse(localStorage.getItem(key)); if(item&&item.plans){saved=item;break;} }catch(e){}
   }
   const result={subject:"tarih",view:"cal",plans:{}};
+  Object.keys(SUBJECTS).forEach(sub=>{ result.plans[sub]=normalizePlan(saved&&saved.plans?saved.plans[sub]:null); });
   if(saved){
-    result.subject=SUBJECTS[saved.subject] ? saved.subject : "tarih";
-    result.view=saved.view==="list" ? "list" : "cal";
-    Object.keys(SUBJECTS).forEach(sub=>result.plans[sub]=normalizePlan(saved.plans[sub]));
+    result.subject = SUBJECTS[saved.subject] ? saved.subject : "tarih";
+    result.view = saved.view==="list" ? "list" : "cal";
   }else{
-    Object.keys(SUBJECTS).forEach(sub=>result.plans[sub]=normalizePlan(null));
     try{
       const old=JSON.parse(localStorage.getItem(LS_OLD));
-      if(old){
-        result.plans.tarih=normalizePlan(old);
-        result.view=old.view==="list" ? "list" : "cal";
-      }
+      if(old){ result.plans.tarih=normalizePlan(old); result.view=old.view==="list"?"list":"cal"; }
     }catch(e){}
   }
+  Object.keys(SUBJECTS).forEach(sub=>migrateDone(result.plans[sub],sub));
   return result;
 }
 let state=loadState();
 const save=()=>{try{localStorage.setItem(LS_NEW,JSON.stringify(state));}catch(e){}};
 const curPlan=()=>state.plans[state.subject];
-const curUnits=()=>SUBJECTS[state.subject].units;
-const isDone=(plan,type,day)=>!!plan.done[`${type}:${day}`];
+const curUnits=()=>unitsFor(state.subject,curPlan());
+const curTopics=()=>orderedTopics(state.subject,curPlan());
+const isDone=(plan,type,id)=>!!plan.done[`${type}:${id}`];
+const countTopics=sub=>orderedTopics(sub,state.plans[sub]).length;
 
+/* ---------- takvim ---------- */
 function schedule(){
-  const topics=flatTopics(state.subject), plan=curPlan();
-  const res=[]; let d=parse(plan.start);
-  for(let i=0;i<topics.length;){
-    if(!(plan.sunday && d.getDay()===0)){res.push({...topics[i],day:i+1,date:iso(d)});i++;}
-    d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1);
-  }
+  const plan=curPlan(), topics=curTopics();
+  const res=[]; let d=parse(plan.start), day=0;
+  topics.forEach(tp=>{
+    if(plan.sunday){ let g=0; while(d.getDay()===0 && g++<7) d=addDays(d,1); }
+    day++;
+    res.push({id:tp.id,t:tp.t,ui:tp.ui,customId:tp.customId,day,date:iso(d)});
+    d=addDays(d,1);
+  });
   return res;
 }
+function dateForIndex(n){
+  const plan=curPlan();
+  let d=parse(plan.start), c=0;
+  if(n<1) return iso(d);
+  for(let guard=0;guard<4000;guard++){
+    if(!(plan.sunday && d.getDay()===0)){ c++; if(c>=n) return iso(d); }
+    d=addDays(d,1);
+  }
+  return iso(d);
+}
+function workingDayIndex(dateIsoStr){
+  const plan=curPlan(), target=parse(dateIsoStr);
+  let d=parse(plan.start), n=0;
+  if(target<d) return 1;
+  for(let guard=0;guard<4000 && d<=target;guard++){
+    if(!(plan.sunday && d.getDay()===0)) n++;
+    d=addDays(d,1);
+  }
+  const rest = plan.sunday && parse(dateIsoStr).getDay()===0;
+  return Math.max(1, rest ? n+1 : n);
+}
 
-function toggle(day,type="topic"){
+/* ---------- taşıma ---------- */
+function moveTopic(id,dateIsoStr){
+  if(!id || !/^\d{4}-\d{2}-\d{2}$/.test(dateIsoStr||"")) return;
+  const plan=curPlan();
+  const order=curTopics().map(x=>x.id);
+  const from=order.indexOf(id);
+  if(from<0) return;
+  order.splice(from,1);
+  const pos=workingDayIndex(dateIsoStr);
+  const to=Math.max(0,Math.min(order.length,pos-1));
+  order.splice(to,0,id);
+  plan.order=order;
+  save(); render();
+}
+function moveBy(id,delta){
+  const plan=curPlan(), order=curTopics().map(x=>x.id);
+  const i=order.indexOf(id), j=i+delta;
+  if(i<0 || j<0 || j>=order.length) return;
+  const tmp=order[i]; order[i]=order[j]; order[j]=tmp;
+  plan.order=order; save(); render();
+}
+function toggle(id,type="topic"){
   if(type!=="topic" && type!=="review") return;
-  const p=curPlan(), key=`${type}:${day}`;
+  const p=curPlan(), key=`${type}:${id}`;
   p.done[key]=!p.done[key]; save(); render();
 }
 
+/* ---------- sürükle-bırak ---------- */
+let dragId=null;
+function dragStart(e,id){
+  dragId=id;
+  try{ e.dataTransfer.effectAllowed="move"; e.dataTransfer.setData("text/plain",id); }catch(err){}
+  if(e.currentTarget && e.currentTarget.classList) e.currentTarget.classList.add("dragging");
+}
+function dragEnd(){
+  dragId=null;
+  document.querySelectorAll(".cell.dropok").forEach(c=>c.classList.remove("dropok"));
+  document.querySelectorAll(".calendar-task.dragging").forEach(c=>c.classList.remove("dragging"));
+}
+function dragOver(e,cell){
+  if(!cell.dataset.date) return;
+  e.preventDefault();
+  try{ e.dataTransfer.dropEffect="move"; }catch(err){}
+  cell.classList.add("dropok");
+}
+function dragLeave(e,cell){ cell.classList.remove("dropok"); }
+function dropTopic(e,cell){
+  e.preventDefault();
+  cell.classList.remove("dropok");
+  let id=dragId;
+  try{ if(!id && e.dataTransfer) id=e.dataTransfer.getData("text/plain"); }catch(err){}
+  const date=cell.dataset.date;
+  dragId=null;
+  if(id && date) moveTopic(id,date);
+}
+
+/* ---------- düzenleyici ---------- */
+let editing=null;
+function showModal(mode,id){
+  const plan=curPlan(), units=curUnits(), list=curTopics();
+  const item=id ? list.find(x=>x.id===id) : null;
+  editing={mode,id:id||null};
+  const modal=$("#editModal");
+  modal.dataset.mode=mode;
+  modal.classList.add("open");
+  $("#editTitle").textContent = mode==="new" ? "Yeni konu ekle" : (mode==="move" ? "Konuyu başka güne taşı" : "Konuyu düzenle");
+  $("#fTopicWrap").style.display = mode==="move" ? "none" : "";
+  $("#fUnitWrap").style.display = mode==="move" ? "none" : "";
+  $("#deleteTopic").style.display = (mode==="edit" && item && item.customId) ? "" : "none";
+  const sel=$("#fUnit");
+  sel.innerHTML=units.map((u,i)=>`<option value="${i}">${escapeHTML(u.name)}</option>`).join("");
+  sel.value=String(item ? item.ui : units.length-1);
+  $("#fTopic").value = item ? item.t : "";
+  $("#fTopic").classList.remove("err");
+  const cur=schedById(id);
+  $("#fDate").value = mode==="new" ? dateForIndex(list.length+1) : (cur ? cur.date : dateForIndex(1));
+  if(mode!=="move") setTimeout(()=>$("#fTopic").focus(),30);
+}
+function schedById(id){ return schedule().find(p=>p.id===id); }
+function openEditor(id){ showModal(id ? "edit" : "new", id||null); }
+function openMove(id){ showModal("move",id); }
+function closeModal(){ $("#editModal").classList.remove("open"); editing=null; }
+function submitEditor(){
+  if(!editing) return;
+  const plan=curPlan(), mode=editing.mode, dateVal=$("#fDate").value;
+  if(mode==="move"){ const id=editing.id; closeModal(); if(id&&dateVal) moveTopic(id,dateVal); return; }
+  const text=$("#fTopic").value.trim().replace(/\s+/g," ");
+  if(!text){ $("#fTopic").classList.add("err"); $("#fTopic").focus(); return; }
+  const ui=Number($("#fUnit").value);
+  if(mode==="new"){
+    plan.seq=(plan.seq||0)+1;
+    const id=`c${plan.seq}`;
+    plan.custom.push({id,t:text,ui});
+    plan.order=curTopics().map(x=>x.id);
+    closeModal(); save();
+    if(dateVal) moveTopic(id,dateVal); else render();
+    return;
+  }
+  const c=plan.custom.find(x=>x.id===editing.id);
+  if(c){ c.t=text; c.ui=ui; }
+  const id=editing.id;
+  closeModal(); save();
+  if(dateVal && (!schedById(id) || schedById(id).date!==dateVal)) moveTopic(id,dateVal); else render();
+}
+function deleteTopic(){
+  if(!editing || !editing.id) return;
+  const id=editing.id;
+  if(!confirm("Bu konu silinsin mi? Takvim yeniden hesaplanacak.")) return;
+  const plan=curPlan();
+  plan.custom=(plan.custom||[]).filter(c=>c.id!==id);
+  plan.order=(plan.order||[]).filter(x=>x!==id);
+  Object.keys(plan.done).forEach(k=>{ if(k.endsWith(":"+id)) delete plan.done[k]; });
+  closeModal(); save(); render();
+}
+
+/* ---------- gün kartı ---------- */
 function todayTask(item,type,label,description=""){
-  const done=isDone(curPlan(),type,item.day);
+  const done=isDone(curPlan(),type,item.id);
   const accessible=description ? `${label}: ${description}` : label;
-  return `<button type="button" class="today-task${done?" done":""}" aria-pressed="${done}" aria-label="${escapeHTML(accessible)}" onclick="toggle(${item.day},'${type}')">
+  return `<button type="button" class="today-task${done?" done":""}" aria-pressed="${done}" aria-label="${escapeHTML(accessible)}" onclick="toggle('${item.id}','${type}')">
     <span class="task-check" aria-hidden="true">${done?"✓":""}</span>
     <span class="task-info"><b>${escapeHTML(label)}</b>${description?`<span class="task-copy">${escapeHTML(description)}</span>`:""}</span>
   </button>`;
 }
 
+/* ---------- render ---------- */
 function render(){
   const subj=state.subject, plan=curPlan(), UNITS=curUnits();
   document.body.dataset.subject=subj;
@@ -526,30 +731,32 @@ function render(){
   $("#heroTitle").textContent=SUBJECTS[subj].title;
   $("#heroSub").textContent=SUBJECTS[subj].sub;
   document.title=SUBJECTS[subj].title;
-  $("#countTarih").textContent=`${countTopics("tarih")} gün · ${countTopics("tarih")*2} görev`;
-  $("#countCog").textContent=`${countTopics("cografya")} gün · ${countTopics("cografya")*2} görev`;
-  $("#countVat").textContent=`${countTopics("vatandaslik")} gün · ${countTopics("vatandaslik")*2} görev`;
+  const countMap={tarih:"#countTarih",cografya:"#countCog",vatandaslik:"#countVat"};
+  Object.keys(SUBJECTS).forEach(s=>{
+    const n=countTopics(s);
+    $(countMap[s]).textContent=`${n} konu · ${n*2} gün`;
+  });
   document.querySelectorAll(".subj").forEach(b=>{
     const active=b.dataset.subject===subj;
     b.classList.toggle("active",active); b.setAttribute("aria-selected",String(active));
   });
-
   $("#start").value=plan.start; $("#sunday").checked=plan.sunday;
   document.querySelectorAll(".tabs .btn").forEach(b=>{
     const active=b.dataset.view===state.view;
     b.classList.toggle("active",active); b.setAttribute("aria-pressed",String(active));
   });
+
   const sched=schedule(), map={}; sched.forEach(p=>map[p.date]=p);
   const total=sched.length*2;
-  const done=sched.reduce((sum,p)=>sum+Number(isDone(plan,"topic",p.day))+Number(isDone(plan,"review",p.day)),0);
+  const done=sched.reduce((sum,p)=>sum+Number(isDone(plan,"topic",p.id))+Number(isDone(plan,"review",p.id)),0);
   $("#sTotal").textContent=total; $("#sDone").textContent=done;
-  $("#sEnd").textContent=sched.length ? fmt(parse(sched[sched.length-1].date),{day:"numeric",month:"short",year:"numeric"}) : "-";
+  $("#sEnd").textContent = sched.length ? fmt(parse(sched[sched.length-1].date),{day:"numeric",month:"short",year:"numeric"}) : "-";
   const pct=total?Math.round(done/total*100):0;
   $("#sPct").textContent="%"+pct; $("#bar").style.width=pct+"%";
 
   const tp=map[todayIso];
-  const next=sched.find(p=>p.date>=todayIso && (!isDone(plan,"topic",p.day)||!isDone(plan,"review",p.day)))
-    || sched.find(p=>!isDone(plan,"topic",p.day)||!isDone(plan,"review",p.day));
+  const next=sched.find(p=>p.date>=todayIso && (!isDone(plan,"topic",p.id)||!isDone(plan,"review",p.id)))
+    || sched.find(p=>!isDone(plan,"topic",p.id)||!isDone(plan,"review",p.id));
   if(tp){
     $("#todayCard").innerHTML=`<small>Bugünün görevleri · ${tp.day}. gün · ${escapeHTML(UNITS[tp.ui].name)}</small>
       <div class="today-tasks">${todayTask(tp,"topic","Konu",tp.t)}${todayTask(tp,"review",REVIEW_TEXT)}</div>`;
@@ -561,33 +768,44 @@ function render(){
     $("#todayCard").innerHTML="<small>🎉 Bu dersin tüm görevleri tamamlandı!</small>";
   }
 
-  $("#legend").innerHTML=UNITS.map(u=>`<span><i style="background:${u.color}"></i>${escapeHTML(u.name)} (${u.topics.length})</span>`).join("");
+  const groups=UNITS.map((u,ui)=>({u,ui,items:sched.filter(p=>p.ui===ui)})).filter(g=>g.items.length);
+  $("#legend").innerHTML=groups.map(g=>`<span><i style="background:${g.u.color}"></i>${escapeHTML(g.u.name)} (${g.items.length})</span>`).join("");
   const v=$("#view");
+
   if(state.view==="list"){
-    v.innerHTML=UNITS.map((u,ui)=>{
-      const items=sched.filter(p=>p.ui===ui);
+    v.innerHTML=groups.map(g=>{
+      const u=g.u, items=g.items;
       return `<section class="list"><div class="unit-h" style="background:${u.color}"><span>${escapeHTML(u.name)}</span><small>${items.length} gün · ${items.length*2} görev</small></div>`+
         items.map(p=>{
-          const topicDone=isDone(plan,"topic",p.day), reviewDone=isDone(plan,"review",p.day);
+          const topicDone=isDone(plan,"topic",p.id), reviewDone=isDone(plan,"review",p.id);
           const dayDate=escapeHTML(fmt(parse(p.date),{day:"numeric",month:"long",weekday:"short"}));
           const revTitle=`${p.day}. konu tekrarı: ${p.t}`;
+          const editBtn=p.customId?`<button type="button" class="mini" title="Düzenle / sil" onclick="openEditor('${p.id}')">✏️</button>`:"";
           return `<article class="day-group${p.date===todayIso?" today":""}">
             <div class="day-head"><span class="g">${p.day}. Gün</span><span class="dt">${dayDate}</span></div>
-            <label class="task-row${topicDone?" done":""}">
-              <input type="checkbox" ${topicDone?"checked":""} aria-label="${p.day}. gün konu görevini tamamla" onchange="toggle(${p.day},'topic')">
+            <div class="task-row${topicDone?" done":""}">
+              <input type="checkbox" ${topicDone?"checked":""} aria-label="${p.day}. gün konu görevini tamamla" onchange="toggle('${p.id}','topic')">
               <span class="task-badge topic-badge">📘 Konu</span><span class="t">${escapeHTML(p.t)}</span>
-            </label>
-            <label class="task-row review-row${reviewDone?" done":""}">
-              <input type="checkbox" ${reviewDone?"checked":""} aria-label="${p.day}. gün Tekrar + Soru görevini tamamla" onchange="toggle(${p.day},'review')">
+              <span class="row-actions">
+                <button type="button" class="mini" title="Bir gün öne al" onclick="moveBy('${p.id}',-1)">↑</button>
+                <button type="button" class="mini" title="Bir gün geri al" onclick="moveBy('${p.id}',1)">↓</button>
+                <button type="button" class="mini" title="Başka güne taşı" onclick="openMove('${p.id}')">📅</button>
+                ${editBtn}
+              </span>
+            </div>
+            <div class="task-row review-row${reviewDone?" done":""}">
+              <input type="checkbox" ${reviewDone?"checked":""} aria-label="${p.day}. gün Tekrar + Soru görevini tamamla" onchange="toggle('${p.id}','review')">
               <span class="task-badge review-badge">🔁 ${REVIEW_TEXT}</span><span class="t" style="color:#596579">${escapeHTML(revTitle)}</span>
-            </label>
+              <span class="row-actions"></span>
+            </div>
           </article>`;
         }).join("")+`</section>`;
     }).join("");
     return;
   }
 
-  const first=parse(sched[0].date), last=parse(sched[sched.length-1].date);
+  if(!sched.length){ v.innerHTML=`<section class="month"><p style="margin:0;color:#6b7280">Henüz konu yok. “＋ Konu ekle” ile başla.</p></section>`; return; }
+  const first=parse(sched[0].date), last=parse(sched[sched.length-1].date), startDate=parse(plan.start);
   let html="", m=new Date(first.getFullYear(),first.getMonth(),1);
   const dows=["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
   while(m<=last){
@@ -600,22 +818,24 @@ function render(){
       const inRange=dt>=first && dt<=last;
       const isToday=k===todayIso?" today":"";
       const dw=dows[(dt.getDay()+6)%7];
+      const dropAttr=dt>=startDate ? ` data-date="${k}" ondragover="dragOver(event,this)" ondragleave="dragLeave(event,this)" ondrop="dropTopic(event,this)"` : "";
       if(p){
-        const unit=UNITS[p.ui];
-        const topicDone=isDone(plan,"topic",p.day), reviewDone=isDone(plan,"review",p.day);
+        const unit=UNITS[p.ui] || CUSTOM_UNIT;
+        const topicDone=isDone(plan,"topic",p.id), reviewDone=isDone(plan,"review",p.id);
         const topicLabel=`${p.day}. gün konu görevi: ${p.t}`;
         const reviewLabel=`${p.day}. gün Tekrar + Soru görevi`;
-        html+=`<div class="cell${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span><span class="dn">${p.day}. gün</span></div>
-          <button type="button" class="calendar-task topic-task${topicDone?" done":""}" title="${escapeHTML(p.t)}" aria-label="${escapeHTML(topicLabel)}" aria-pressed="${topicDone}" onclick="toggle(${p.day},'topic')" style="--task-color:${unit.color};--task-bg:${unit.bg}">
-            <span class="task-check" aria-hidden="true">${topicDone?"✓":""}</span><span class="task-label">Konu</span><span class="task-copy">${escapeHTML(p.t)}</span>
+        const editHint=p.customId?`<span class="cal-edit" title="Düzenle" onclick="event.stopPropagation();openEditor('${p.id}')">✏️</span>`:"";
+        html+=`<div class="cell${isToday}"${dropAttr}><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span><span class="dn">${p.day}. gün</span></div>
+          <button type="button" draggable="true" class="calendar-task topic-task${topicDone?" done":""}" title="${escapeHTML(p.t)} — sürükleyerek başka güne taşı" aria-label="${escapeHTML(topicLabel)}" aria-pressed="${topicDone}" onclick="toggle('${p.id}','topic')" ondragstart="dragStart(event,'${p.id}')" ondragend="dragEnd()" style="--task-color:${unit.color};--task-bg:${unit.bg}">
+            <span class="task-check" aria-hidden="true">${topicDone?"✓":""}</span><span class="task-label">Konu${editHint}</span><span class="task-copy">${escapeHTML(p.t)}</span>
           </button>
-          <button type="button" class="calendar-task review-task${reviewDone?" done":""}" title="${REVIEW_TEXT}" aria-label="${escapeHTML(reviewLabel)}" aria-pressed="${reviewDone}" onclick="toggle(${p.day},'review')" style="--task-color:var(--accent);--task-bg:#f7f8fa">
+          <button type="button" class="calendar-task review-task${reviewDone?" done":""}" title="${REVIEW_TEXT}" aria-label="${escapeHTML(reviewLabel)}" aria-pressed="${reviewDone}" onclick="toggle('${p.id}','review')" style="--task-color:var(--accent);--task-bg:#f7f8fa">
             <span class="task-check" aria-hidden="true">${reviewDone?"✓":""}</span><span class="task-label">${REVIEW_TEXT}</span>
           </button></div>`;
       }else if(inRange){
-        html+=`<div class="cell off${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span></div><div class="offtxt">☕ Dinlenme</div></div>`;
+        html+=`<div class="cell off${isToday}"${dropAttr}><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span></div><div class="offtxt">☕ Dinlenme</div></div>`;
       }else{
-        html+=`<div class="cell dim${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span></div></div>`;
+        html+=`<div class="cell dim${isToday}"${dropAttr}><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span></div></div>`;
       }
     }
     html+=`</div></section>`;
@@ -624,15 +844,26 @@ function render(){
   v.innerHTML=html;
 }
 
+/* ---------- olaylar ---------- */
 document.querySelectorAll(".subj").forEach(b=>b.onclick=()=>{state.subject=b.dataset.subject;save();render();});
 $("#start").addEventListener("change",e=>{if(e.target.value){curPlan().start=e.target.value;save();render();}});
 $("#sunday").addEventListener("change",e=>{curPlan().sunday=e.target.checked;save();render();});
 $("#todayBtn").onclick=()=>{curPlan().start=todayIso;save();render();};
 $("#reset").onclick=()=>{
   const names={tarih:"Tarih",cografya:"Coğrafya",vatandaslik:"Vatandaşlık"}, name=names[state.subject];
-  if(confirm(`${name} ilerlemesi sıfırlansın mı?`)){curPlan().done={};save();render();}
+  if(confirm(`${name} ilerlemesi sıfırlansın mı? (Eklediğin konular ve sıra korunur)`)){curPlan().done={};save();render();}
 };
 document.querySelectorAll(".tabs .btn").forEach(b=>b.onclick=()=>{state.view=b.dataset.view;save();render();});
+$("#addTopic").onclick=()=>openEditor(null);
+$("#saveTopic").onclick=submitEditor;
+$("#deleteTopic").onclick=deleteTopic;
+$("#cancelTopic").onclick=closeModal;
+$("#editModal").addEventListener("click",e=>{ if(e.target.id==="editModal") closeModal(); });
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape") closeModal();
+  if(e.key==="Enter" && $("#editModal").classList.contains("open") && document.activeElement && document.activeElement.id==="fTopic"){ e.preventDefault(); submitEditor(); }
+});
+$("#fTopic").addEventListener("input",e=>e.target.classList.remove("err"));
 render();
 </script>
 </body>

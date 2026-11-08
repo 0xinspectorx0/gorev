@@ -5,11 +5,15 @@ KPSS Lisans hazırlığı için **Tarih, Coğrafya ve Vatandaşlık** derslerini
 ## ✨ Özellikler
 
 - **Sekmeler:** Tarih / Coğrafya / Vatandaşlık — tıkladığın ders açılır, tema rengi de o derse göre değişir.
-- **Her güne 1 konu:** Takvimdeki her gün için tek bir ana konu.
+- **Her güne 1 konu:** Takvimdeki her gün için tek bir ana konu (hazır müfredat + kendi ekledikleriniz).
 - **Tekrar + Soru görevi:** Her güne ayrıca bir *Tekrar + Soru* görevi eklenir.
 - **Bugünün planı:** Sayfa açıldığında o günün konusu ve görevi öne çıkar.
-- **İlerleme takibi:** Yapılan konular/görevler tarayıcıda (localStorage) saklanır; istatistik ve ilerleme çubuğu güncellenir.
+- **İlerleme takibi:** Yapılan konular/görevler tarayıcıda (localStorage) saklanır; istatistik ve ilerleme çubuğu güncellenir. Eklediğin konular ve sıralaman da kalıcıdır; ilerleme artık **konuya** bağlıdır, taşıyınca kaybolmaz.
 - **Başlangıç tarihi seçimi:** Takvim başlangıç tarihine göre yeniden hesaplanır.
+- **＋ Konu ekle:** Kendi konunu ekle — ad, ünite ve **tarih** seç; konu o güne yerleşir, sonrakiler bir gün kayar.
+- **Sürükle-bırak:** Takvimde konu kartını istediğin güne bırak; sıra ve tüm tarihler otomatik yeniden hesaplanır. Aynı günün *Tekrar + Soru* görevi de konuyla birlikte taşınır.
+- **↑ / ↓ / 📅:** Liste görünümünde bir gün öne-geri alma ve istediğin tarihe taşıma (mobil dostu).
+- **Düzenle / sil:** Eklediğin konuları ✏️ ile yeniden adlandır, ünitesini/tarihini değiştir veya sil.
 - **Liste / Takvim görünümü** ve **mobilde tek sütuna düşen** responsive tablo.
 - **Yazdırma dostu** (Ctrl/Cmd + P).
 
