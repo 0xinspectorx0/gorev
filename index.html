@@ -165,6 +165,16 @@
   .cell.dropok{outline:2px dashed var(--accent);outline-offset:-3px;background:#fffaf7}
   body[data-subject="cografya"] .cell.dropok{background:#f0faf8}
   body[data-subject="vatandaslik"] .cell.dropok{background:#f6f3ff}
+  /* Ünite sonu tekrar günü */
+  .calendar-task.urev-task{border-style:dashed;background:repeating-linear-gradient(135deg,#fbfbfd,#fbfbfd 7px,#f2f4f8 7px,#f2f4f8 14px)}
+  .cell.unit-review-cell{background:#fcfcfe}
+  .cell.unit-review-cell .task-label{letter-spacing:.2px}
+  .day-group.unit-review{background:#fbfcfe}
+  body[data-subject="cografya"] .day-group.unit-review{background:#f7fdfc}
+  body[data-subject="vatandaslik"] .day-group.unit-review{background:#fbfaff}
+  @media(max-width:760px){
+    .calendar-task.urev-task{grid-template-rows:auto auto}
+  }
   .cal-edit{font-size:9px;margin-left:3px;cursor:pointer;opacity:.75}
   /* Konu ekleme / düzenleme penceresi */
   .modal{position:fixed;inset:0;background:rgba(24,17,12,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:80}
@@ -565,37 +575,46 @@ const isDone=(plan,type,id)=>!!plan.done[`${type}:${id}`];
 const countTopics=sub=>orderedTopics(sub,state.plans[sub]).length;
 
 /* ---------- takvim ---------- */
+const tasksOf=item=>item.kind==="urev"?1:2;
+function dayCount(sub){
+  const items=orderedTopics(sub,state.plans[sub]);
+  const units=new Set(items.map(x=>x.ui));
+  return items.length+units.size;
+}
 function schedule(){
-  const plan=curPlan(), topics=curTopics();
+  const plan=curPlan(), topics=curTopics(), UNITS=unitsFor(state.subject,plan);
+  const lastPos=new Map();
+  topics.forEach((t,i)=>lastPos.set(t.ui,i));
   const res=[]; let d=parse(plan.start), day=0;
-  topics.forEach(tp=>{
-    if(plan.sunday){ let g=0; while(d.getDay()===0 && g++<7) d=addDays(d,1); }
-    day++;
-    res.push({id:tp.id,t:tp.t,ui:tp.ui,customId:tp.customId,day,date:iso(d)});
+  const skipRest=()=>{ if(plan.sunday){ let g=0; while(d.getDay()===0 && g++<7) d=addDays(d,1); } };
+  topics.forEach((tp,i)=>{
+    skipRest(); day++;
+    res.push({kind:"topic",id:tp.id,doneId:tp.id,t:tp.t,ui:tp.ui,customId:tp.customId,day,date:iso(d)});
     d=addDays(d,1);
+    if(lastPos.get(tp.ui)===i){
+      skipRest(); day++;
+      const unit=UNITS[tp.ui]||CUSTOM_UNIT;
+      res.push({kind:"urev",id:`urev:${tp.ui}`,doneId:String(tp.ui),t:`${unit.name} ünite tekrarı`,ui:tp.ui,customId:null,day,date:iso(d)});
+      d=addDays(d,1);
+    }
   });
   return res;
 }
-function dateForIndex(n){
-  const plan=curPlan();
-  let d=parse(plan.start), c=0;
-  if(n<1) return iso(d);
-  for(let guard=0;guard<4000;guard++){
-    if(!(plan.sunday && d.getDay()===0)){ c++; if(c>=n) return iso(d); }
-    d=addDays(d,1);
-  }
+function nextFreeDate(){
+  const plan=curPlan(), sched=schedule();
+  if(!sched.length) return plan.start;
+  let d=addDays(parse(sched[sched.length-1].date),1);
+  if(plan.sunday){ let g=0; while(d.getDay()===0 && g++<7) d=addDays(d,1); }
   return iso(d);
 }
-function workingDayIndex(dateIsoStr){
-  const plan=curPlan(), target=parse(dateIsoStr);
-  let d=parse(plan.start), n=0;
-  if(target<d) return 1;
-  for(let guard=0;guard<4000 && d<=target;guard++){
-    if(!(plan.sunday && d.getDay()===0)) n++;
-    d=addDays(d,1);
-  }
-  const rest = plan.sunday && parse(dateIsoStr).getDay()===0;
-  return Math.max(1, rest ? n+1 : n);
+function schedulePosForDate(dateIsoStr){
+  const sched=schedule(), target=parse(dateIsoStr);
+  for(let i=0;i<sched.length;i++){ if(parse(sched[i].date)>=target) return i+1; }
+  return sched.length+1;
+}
+function itemComplete(plan,item){
+  if(item.kind==="urev") return isDone(plan,"urev",item.doneId);
+  return isDone(plan,"topic",item.doneId) && isDone(plan,"review",item.doneId);
 }
 
 /* ---------- taşıma ---------- */
@@ -606,11 +625,13 @@ function moveTopic(id,dateIsoStr){
   const from=order.indexOf(id);
   if(from<0) return;
   order.splice(from,1);
-  const pos=workingDayIndex(dateIsoStr);
-  const to=Math.max(0,Math.min(order.length,pos-1));
-  order.splice(to,0,id);
-  plan.order=order;
-  save(); render();
+  const pos=schedulePosForDate(dateIsoStr);
+  let insert=0;
+  schedule().slice(0,pos-1).forEach(it=>{ if(it.kind==="topic") insert++; });
+  if(from<insert) insert--;
+  insert=Math.max(0,Math.min(order.length,insert));
+  order.splice(insert,0,id);
+  plan.order=order; save(); render();
 }
 function moveBy(id,delta){
   const plan=curPlan(), order=curTopics().map(x=>x.id);
@@ -620,7 +641,7 @@ function moveBy(id,delta){
   plan.order=order; save(); render();
 }
 function toggle(id,type="topic"){
-  if(type!=="topic" && type!=="review") return;
+  if(type!=="topic" && type!=="review" && type!=="urev") return;
   const p=curPlan(), key=`${type}:${id}`;
   p.done[key]=!p.done[key]; save(); render();
 }
@@ -656,8 +677,9 @@ function dropTopic(e,cell){
 
 /* ---------- düzenleyici ---------- */
 let editing=null;
+function schedById(id){ return schedule().find(p=>p.id===id); }
 function showModal(mode,id){
-  const plan=curPlan(), units=curUnits(), list=curTopics();
+  const units=curUnits(), list=curTopics();
   const item=id ? list.find(x=>x.id===id) : null;
   editing={mode,id:id||null};
   const modal=$("#editModal");
@@ -673,10 +695,9 @@ function showModal(mode,id){
   $("#fTopic").value = item ? item.t : "";
   $("#fTopic").classList.remove("err");
   const cur=schedById(id);
-  $("#fDate").value = mode==="new" ? dateForIndex(list.length+1) : (cur ? cur.date : dateForIndex(1));
+  $("#fDate").value = (mode!=="new" && cur) ? cur.date : nextFreeDate();
   if(mode!=="move") setTimeout(()=>$("#fTopic").focus(),30);
 }
-function schedById(id){ return schedule().find(p=>p.id===id); }
 function openEditor(id){ showModal(id ? "edit" : "new", id||null); }
 function openMove(id){ showModal("move",id); }
 function closeModal(){ $("#editModal").classList.remove("open"); editing=null; }
@@ -699,8 +720,9 @@ function submitEditor(){
   const c=plan.custom.find(x=>x.id===editing.id);
   if(c){ c.t=text; c.ui=ui; }
   const id=editing.id;
+  const before=schedById(id);
   closeModal(); save();
-  if(dateVal && (!schedById(id) || schedById(id).date!==dateVal)) moveTopic(id,dateVal); else render();
+  if(dateVal && (!before || before.date!==dateVal)) moveTopic(id,dateVal); else render();
 }
 function deleteTopic(){
   if(!editing || !editing.id) return;
@@ -713,14 +735,21 @@ function deleteTopic(){
   closeModal(); save(); render();
 }
 
-/* ---------- gün kartı ---------- */
+/* ---------- görev düğmeleri ---------- */
 function todayTask(item,type,label,description=""){
-  const done=isDone(curPlan(),type,item.id);
+  const done=isDone(curPlan(),type,item.doneId);
   const accessible=description ? `${label}: ${description}` : label;
-  return `<button type="button" class="today-task${done?" done":""}" aria-pressed="${done}" aria-label="${escapeHTML(accessible)}" onclick="toggle('${item.id}','${type}')">
+  return `<button type="button" class="today-task${done?" done":""}" aria-pressed="${done}" aria-label="${escapeHTML(accessible)}" onclick="toggle('${item.doneId}','${type}')">
     <span class="task-check" aria-hidden="true">${done?"✓":""}</span>
     <span class="task-info"><b>${escapeHTML(label)}</b>${description?`<span class="task-copy">${escapeHTML(description)}</span>`:""}</span>
   </button>`;
+}
+function tasksHTML(item){
+  if(item.kind==="urev"){
+    const unit=curUnits()[item.ui]||CUSTOM_UNIT;
+    return todayTask(item,"urev","🔁 "+REVIEW_TEXT,`${unit.name} ünite tekrarı + soru çözümü`);
+  }
+  return todayTask(item,"topic","Konu",item.t)+todayTask(item,"review",REVIEW_TEXT);
 }
 
 /* ---------- render ---------- */
@@ -733,8 +762,7 @@ function render(){
   document.title=SUBJECTS[subj].title;
   const countMap={tarih:"#countTarih",cografya:"#countCog",vatandaslik:"#countVat"};
   Object.keys(SUBJECTS).forEach(s=>{
-    const n=countTopics(s);
-    $(countMap[s]).textContent=`${n} konu · ${n*2} gün`;
+    $(countMap[s]).textContent=`${countTopics(s)} konu · ${dayCount(s)} gün`;
   });
   document.querySelectorAll(".subj").forEach(b=>{
     const active=b.dataset.subject===subj;
@@ -747,44 +775,61 @@ function render(){
   });
 
   const sched=schedule(), map={}; sched.forEach(p=>map[p.date]=p);
-  const total=sched.length*2;
-  const done=sched.reduce((sum,p)=>sum+Number(isDone(plan,"topic",p.id))+Number(isDone(plan,"review",p.id)),0);
+  const total=sched.reduce((a,it)=>a+tasksOf(it),0);
+  const done=sched.reduce((a,it)=>a+(it.kind==="urev"
+      ? Number(isDone(plan,"urev",it.doneId))
+      : Number(isDone(plan,"topic",it.doneId))+Number(isDone(plan,"review",it.doneId))),0);
   $("#sTotal").textContent=total; $("#sDone").textContent=done;
   $("#sEnd").textContent = sched.length ? fmt(parse(sched[sched.length-1].date),{day:"numeric",month:"short",year:"numeric"}) : "-";
   const pct=total?Math.round(done/total*100):0;
   $("#sPct").textContent="%"+pct; $("#bar").style.width=pct+"%";
 
   const tp=map[todayIso];
-  const next=sched.find(p=>p.date>=todayIso && (!isDone(plan,"topic",p.id)||!isDone(plan,"review",p.id)))
-    || sched.find(p=>!isDone(plan,"topic",p.id)||!isDone(plan,"review",p.id));
+  const next=sched.find(p=>p.date>=todayIso && !itemComplete(plan,p)) || sched.find(p=>!itemComplete(plan,p));
   if(tp){
-    $("#todayCard").innerHTML=`<small>Bugünün görevleri · ${tp.day}. gün · ${escapeHTML(UNITS[tp.ui].name)}</small>
-      <div class="today-tasks">${todayTask(tp,"topic","Konu",tp.t)}${todayTask(tp,"review",REVIEW_TEXT)}</div>`;
+    const head = tp.kind==="urev" ? `Bugünün görevi · ${tp.day}. gün · ${escapeHTML(UNITS[tp.ui].name)}` : `Bugünün görevleri · ${tp.day}. gün · ${escapeHTML(UNITS[tp.ui].name)}`;
+    $("#todayCard").innerHTML=`<small>${head}</small><div class="today-tasks">${tasksHTML(tp)}</div>`;
   }else if(next){
     const when=next.date<todayIso?"Kaldığın yer":"Sıradaki çalışma";
-    $("#todayCard").innerHTML=`<small>${when} · ${fmt(parse(next.date),{day:"numeric",month:"long"})} · ${next.day}. gün · ${escapeHTML(UNITS[next.ui].name)}</small>
-      <div class="today-tasks">${todayTask(next,"topic","Konu",next.t)}${todayTask(next,"review",REVIEW_TEXT)}</div>`;
+    const head = next.kind==="urev" ? `${when} · ${fmt(parse(next.date),{day:"numeric",month:"long"})} · ${next.day}. gün · ${escapeHTML(UNITS[next.ui].name)}` : `${when} · ${fmt(parse(next.date),{day:"numeric",month:"long"})} · ${next.day}. gün · ${escapeHTML(UNITS[next.ui].name)}`;
+    $("#todayCard").innerHTML=`<small>${head}</small><div class="today-tasks">${tasksHTML(next)}</div>`;
   }else{
     $("#todayCard").innerHTML="<small>🎉 Bu dersin tüm görevleri tamamlandı!</small>";
   }
 
   const groups=UNITS.map((u,ui)=>({u,ui,items:sched.filter(p=>p.ui===ui)})).filter(g=>g.items.length);
-  $("#legend").innerHTML=groups.map(g=>`<span><i style="background:${g.u.color}"></i>${escapeHTML(g.u.name)} (${g.items.length})</span>`).join("");
+  $("#legend").innerHTML=groups.map(g=>{
+    const n=g.items.filter(p=>p.kind==="topic").length;
+    return `<span><i style="background:${g.u.color}"></i>${escapeHTML(g.u.name)} (${n} konu + 1 tekrar)</span>`;
+  }).join("");
   const v=$("#view");
 
   if(state.view==="list"){
     v.innerHTML=groups.map(g=>{
       const u=g.u, items=g.items;
-      return `<section class="list"><div class="unit-h" style="background:${u.color}"><span>${escapeHTML(u.name)}</span><small>${items.length} gün · ${items.length*2} görev</small></div>`+
+      const tasks=items.reduce((a,it)=>a+tasksOf(it),0);
+      return `<section class="list"><div class="unit-h" style="background:${u.color}"><span>${escapeHTML(u.name)}</span><small>${items.length} gün · ${tasks} görev</small></div>`+
         items.map(p=>{
-          const topicDone=isDone(plan,"topic",p.id), reviewDone=isDone(plan,"review",p.id);
           const dayDate=escapeHTML(fmt(parse(p.date),{day:"numeric",month:"long",weekday:"short"}));
+          if(p.kind==="urev"){
+            const d=isDone(plan,"urev",p.doneId);
+            return `<article class="day-group unit-review${p.date===todayIso?" today":""}">
+              <div class="day-head"><span class="g">${p.day}. Gün</span><span class="dt">${dayDate}</span></div>
+              <div class="task-row review-row${d?" done":""}">
+                <input type="checkbox" ${d?"checked":""} aria-label="${p.day}. gün ünite tekrarı görevini tamamla" onchange="toggle('${p.doneId}','urev')">
+                <span class="task-badge review-badge">🔁 ${REVIEW_TEXT}</span>
+                <span class="t">${escapeHTML(u.name)} ünite tekrarı + soru çözümü</span>
+                <span class="row-actions"></span>
+              </div>
+            </article>`;
+          }
+          const topicDone=isDone(plan,"topic",p.doneId), reviewDone=isDone(plan,"review",p.doneId);
           const revTitle=`${p.day}. konu tekrarı: ${p.t}`;
           const editBtn=p.customId?`<button type="button" class="mini" title="Düzenle / sil" onclick="openEditor('${p.id}')">✏️</button>`:"";
           return `<article class="day-group${p.date===todayIso?" today":""}">
             <div class="day-head"><span class="g">${p.day}. Gün</span><span class="dt">${dayDate}</span></div>
             <div class="task-row${topicDone?" done":""}">
-              <input type="checkbox" ${topicDone?"checked":""} aria-label="${p.day}. gün konu görevini tamamla" onchange="toggle('${p.id}','topic')">
+              <input type="checkbox" ${topicDone?"checked":""} aria-label="${p.day}. gün konu görevini tamamla" onchange="toggle('${p.doneId}','topic')">
               <span class="task-badge topic-badge">📘 Konu</span><span class="t">${escapeHTML(p.t)}</span>
               <span class="row-actions">
                 <button type="button" class="mini" title="Bir gün öne al" onclick="moveBy('${p.id}',-1)">↑</button>
@@ -794,7 +839,7 @@ function render(){
               </span>
             </div>
             <div class="task-row review-row${reviewDone?" done":""}">
-              <input type="checkbox" ${reviewDone?"checked":""} aria-label="${p.day}. gün Tekrar + Soru görevini tamamla" onchange="toggle('${p.id}','review')">
+              <input type="checkbox" ${reviewDone?"checked":""} aria-label="${p.day}. gün Tekrar + Soru görevini tamamla" onchange="toggle('${p.doneId}','review')">
               <span class="task-badge review-badge">🔁 ${REVIEW_TEXT}</span><span class="t" style="color:#596579">${escapeHTML(revTitle)}</span>
               <span class="row-actions"></span>
             </div>
@@ -819,17 +864,24 @@ function render(){
       const isToday=k===todayIso?" today":"";
       const dw=dows[(dt.getDay()+6)%7];
       const dropAttr=dt>=startDate ? ` data-date="${k}" ondragover="dragOver(event,this)" ondragleave="dragLeave(event,this)" ondrop="dropTopic(event,this)"` : "";
-      if(p){
+      if(p && p.kind==="urev"){
+        const unit=UNITS[p.ui]||CUSTOM_UNIT;
+        const dDone=isDone(plan,"urev",p.doneId);
+        html+=`<div class="cell unit-review-cell${isToday}"${dropAttr}><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span><span class="dn">${p.day}. gün</span></div>
+          <button type="button" class="calendar-task urev-task${dDone?" done":""}" title="${escapeHTML(unit.name)} ünite tekrarı + soru çözümü" aria-label="${escapeHTML(p.day)}. gün ünite tekrarı" aria-pressed="${dDone}" onclick="toggle('${p.doneId}','urev')" style="--task-color:${unit.color};--task-bg:${unit.bg}">
+            <span class="task-check" aria-hidden="true">${dDone?"✓":""}</span><span class="task-label">🔁 ${REVIEW_TEXT}</span><span class="task-copy">${escapeHTML(unit.name)} ünite tekrarı</span>
+          </button></div>`;
+      }else if(p){
         const unit=UNITS[p.ui] || CUSTOM_UNIT;
-        const topicDone=isDone(plan,"topic",p.id), reviewDone=isDone(plan,"review",p.id);
+        const topicDone=isDone(plan,"topic",p.doneId), reviewDone=isDone(plan,"review",p.doneId);
         const topicLabel=`${p.day}. gün konu görevi: ${p.t}`;
         const reviewLabel=`${p.day}. gün Tekrar + Soru görevi`;
         const editHint=p.customId?`<span class="cal-edit" title="Düzenle" onclick="event.stopPropagation();openEditor('${p.id}')">✏️</span>`:"";
         html+=`<div class="cell${isToday}"${dropAttr}><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span><span class="dn">${p.day}. gün</span></div>
-          <button type="button" draggable="true" class="calendar-task topic-task${topicDone?" done":""}" title="${escapeHTML(p.t)} — sürükleyerek başka güne taşı" aria-label="${escapeHTML(topicLabel)}" aria-pressed="${topicDone}" onclick="toggle('${p.id}','topic')" ondragstart="dragStart(event,'${p.id}')" ondragend="dragEnd()" style="--task-color:${unit.color};--task-bg:${unit.bg}">
+          <button type="button" draggable="true" class="calendar-task topic-task${topicDone?" done":""}" title="${escapeHTML(p.t)} — sürükleyerek başka güne taşı" aria-label="${escapeHTML(topicLabel)}" aria-pressed="${topicDone}" onclick="toggle('${p.doneId}','topic')" ondragstart="dragStart(event,'${p.id}')" ondragend="dragEnd()" style="--task-color:${unit.color};--task-bg:${unit.bg}">
             <span class="task-check" aria-hidden="true">${topicDone?"✓":""}</span><span class="task-label">Konu${editHint}</span><span class="task-copy">${escapeHTML(p.t)}</span>
           </button>
-          <button type="button" class="calendar-task review-task${reviewDone?" done":""}" title="${REVIEW_TEXT}" aria-label="${escapeHTML(reviewLabel)}" aria-pressed="${reviewDone}" onclick="toggle('${p.id}','review')" style="--task-color:var(--accent);--task-bg:#f7f8fa">
+          <button type="button" class="calendar-task review-task${reviewDone?" done":""}" title="${REVIEW_TEXT}" aria-label="${escapeHTML(reviewLabel)}" aria-pressed="${reviewDone}" onclick="toggle('${p.doneId}','review')" style="--task-color:var(--accent);--task-bg:#f7f8fa">
             <span class="task-check" aria-hidden="true">${reviewDone?"✓":""}</span><span class="task-label">${REVIEW_TEXT}</span>
           </button></div>`;
       }else if(inRange){

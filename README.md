@@ -5,8 +5,9 @@ KPSS Lisans hazırlığı için **Tarih, Coğrafya ve Vatandaşlık** derslerini
 ## ✨ Özellikler
 
 - **Sekmeler:** Tarih / Coğrafya / Vatandaşlık — tıkladığın ders açılır, tema rengi de o derse göre değişir.
-- **Her güne 1 konu:** Takvimdeki her gün için tek bir ana konu (hazır müfredat + kendi ekledikleriniz).
+- **Her güne 1 konu:** Takvimdeki her gün için tek bir ana konu (hazır müfredat + kendi ekledikleriniz). Tarih 62 konu / 71 gün, Coğrafya 43 / 49, Vatandaşlık 54 / 62.
 - **Tekrar + Soru görevi:** Her güne ayrıca bir *Tekrar + Soru* görevi eklenir.
+- **Ünite sonu tekrar günü:** Her konu başlığının (ünitenin) bitiminde **1 tam gün “Tekrar + Soru”** eklenir, sonra yeni üniteye geçilir. Örnek: `İslamiyet Öncesi Türk Tarihi (9 gün) → 🔁 Tekrar + Soru (1 gün) → İlk Türk-İslam Devletleri (6 gün) …`
 - **Bugünün planı:** Sayfa açıldığında o günün konusu ve görevi öne çıkar.
 - **İlerleme takibi:** Yapılan konular/görevler tarayıcıda (localStorage) saklanır; istatistik ve ilerleme çubuğu güncellenir. Eklediğin konular ve sıralaman da kalıcıdır; ilerleme artık **konuya** bağlıdır, taşıyınca kaybolmaz.
 - **Başlangıç tarihi seçimi:** Takvim başlangıç tarihine göre yeniden hesaplanır.
