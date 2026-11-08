@@ -5,8 +5,8 @@ KPSS Lisans hazırlığı için **Tarih, Coğrafya ve Vatandaşlık** derslerini
 ## ✨ Özellikler
 
 - **Sekmeler:** Tarih / Coğrafya / Vatandaşlık — tıkladığın ders açılır, tema rengi de o derse göre değişir.
-- **Her güne 1 konu:** Takvimdeki her gün için tek bir ana konu.
-- **Tekrar + Soru görevi:** Her güne ayrıca bir *Tekrar + Soru* görevi eklenir.
+- **Dönüşümlü çalışma planı:** Bir gün yeni konu çalışılır.
+- **Tekrar + Soru günü:** Ertesi çalışma günü yalnızca biten konunun tekrarı ve soru çözümü yapılır; ardından yeni konuya geçilir.
 - **Bugünün planı:** Sayfa açıldığında o günün konusu ve görevi öne çıkar.
 - **İlerleme takibi:** Yapılan konular/görevler tarayıcıda (localStorage) saklanır; istatistik ve ilerleme çubuğu güncellenir.
 - **Başlangıç tarihi seçimi:** Takvim başlangıç tarihine göre yeniden hesaplanır.

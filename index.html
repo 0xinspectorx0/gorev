@@ -56,6 +56,7 @@
   body[data-subject="vatandaslik"] .today-card{background:#f5f2ff}
   .today-card small{color:var(--muted)}
   .today-tasks{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+  .today-tasks.single{grid-template-columns:1fr}
   .today-task{display:flex;align-items:flex-start;gap:10px;text-align:left;width:100%;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:10px;color:var(--ink);font:inherit;cursor:pointer;transition:.15s}
   .today-task:hover{border-color:var(--accent);transform:translateY(-1px)}
   .today-task .task-check{flex:0 0 20px;width:20px;height:20px;border:1.5px solid #c9c1b4;border-radius:6px;display:grid;place-items:center;font-size:13px;color:#fff;background:#fff}
@@ -86,8 +87,6 @@
   .calendar-task .task-label{font-weight:800;font-size:10px;color:var(--task-color,var(--accent))}
   .calendar-task .task-copy{grid-column:2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;color:#3f4652}
   .calendar-task.done .task-copy{text-decoration:line-through;color:var(--muted)}
-  .calendar-task.review-task{grid-template-rows:1fr;align-items:center}
-  .calendar-task.review-task .task-check{grid-row:1}
   .calendar-task.review-task.done .task-label{text-decoration:line-through;color:var(--muted)}
   .offtxt{font-size:11px;color:var(--muted);margin:auto;text-align:center}
 
@@ -128,11 +127,9 @@
     .calendar-task .task-check{grid-row:1/3;width:18px;height:18px;font-size:12px;border-radius:6px}
     .calendar-task .task-label{font-size:11px}
     .calendar-task .task-copy{-webkit-line-clamp:unset;overflow:visible;font-size:12px}
-    .calendar-task.review-task{grid-template-rows:auto;align-items:center}
-    .calendar-task.review-task .task-check{grid-row:1}
     .day-group{padding-left:12px;padding-right:12px}
     .task-row{grid-template-columns:20px 78px minmax(0,1fr);gap:7px}
-    .task-row.review-row{grid-template-columns:20px minmax(0,1fr)}
+    .task-row.review-row{grid-template-columns:20px 78px minmax(0,1fr)}
     .task-row .t{font-size:12px}
     .tabs{margin-left:0}
   }
@@ -170,7 +167,7 @@
 <header data-subject="tarih" id="hero">
   <div class="wrap">
     <h1 id="heroTitle">📜 KPSS Lisans Tarih Çalışma Takvimi</h1>
-    <p id="heroSub">Her çalışma gününde 1 konu + 1 tekrar görevi · Sıralı KPSS lisans planı</p>
+    <p id="heroSub">Bir gün konu · Ertesi gün o konunun tekrarı + soru çözümü</p>
   </div>
 </header>
 
@@ -206,14 +203,14 @@
 
   <div class="legend" id="legend"></div>
   <main id="view"></main>
-  <footer>İpucu: Konu ve tekrar görevlerini ayrı ayrı tamamlandı olarak işaretleyebilirsin. Her dersin ilerlemesi tarayıcında ayrı saklanır.</footer>
+  <footer>Plan sırası: Konu → ertesi çalışma günü aynı konunun Tekrar + Soru görevi → sonraki konu. Her dersin ilerlemesi ayrı saklanır.</footer>
 </div>
 
 <script>
 const SUBJECTS = {
 tarih: {
   title: "📜 KPSS Lisans Tarih Çalışma Takvimi",
-  sub: "Her çalışma gününde 1 konu + 1 tekrar görevi · İlk Türklerden çağdaş tarihe sıralı plan",
+  sub: "Bir gün konu · Ertesi gün o konunun tekrarı + soru çözümü · İlk Türklerden çağdaş tarihe",
   units: [
   {name:"İslamiyet Öncesi Türk Tarihi", color:"#8a5a2b", bg:"#f5ebe0", topics:[
     "Türklerin ana yurdu, göçler ve ilk kültür merkezleri (Anav, Afanasyevo, Andronovo, Karasuk, Tagar)",
@@ -299,7 +296,7 @@ tarih: {
 },
 cografya: {
   title: "🗺️ KPSS Lisans Coğrafya Çalışma Takvimi",
-  sub: "Her çalışma gününde 1 konu + 1 tekrar görevi · Haritadan Türkiye'nin bölgelerine sıralı plan",
+  sub: "Bir gün konu · Ertesi gün o konunun tekrarı + soru çözümü · Türkiye coğrafyası",
   units: [
   {name:"Coğrafyanın Temelleri", color:"#1d4e89", bg:"#e2ecf8", topics:[
     "Coğrafyanın bölümleri, paralel ve meridyenler (matematik konum)",
@@ -360,7 +357,7 @@ cografya: {
 },
 vatandaslik: {
   title: "⚖️ KPSS Lisans Vatandaşlık Çalışma Takvimi",
-  sub: "Her çalışma gününde 1 konu + 1 tekrar görevi · Hukukun temellerinden idare hukukuna sıralı plan",
+  sub: "Bir gün konu · Ertesi gün o konunun tekrarı + soru çözümü · Hukuktan idareye",
   units: [
     {name:"Hukukun Temel Kavramları", color:"#6852b8", bg:"#eee9ff", topics:[
       "Toplumsal düzen kuralları: hukuk, din, ahlak ve görgü kuralları; yaptırımlar",
@@ -495,24 +492,31 @@ const isDone=(plan,type,day)=>!!plan.done[`${type}:${day}`];
 
 function schedule(){
   const topics=flatTopics(state.subject), plan=curPlan();
-  const res=[]; let d=parse(plan.start);
-  for(let i=0;i<topics.length;){
-    if(!(plan.sunday && d.getDay()===0)){res.push({...topics[i],day:i+1,date:iso(d)});i++;}
+  const res=[]; let d=parse(plan.start), day=1;
+  const nextStudyDate=()=>{
+    while(plan.sunday && d.getDay()===0) d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1);
+    const value=iso(d);
     d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1);
-  }
+    return value;
+  };
+  topics.forEach((topic,index)=>{
+    const taskId=index+1;
+    res.push({...topic,kind:"topic",taskId,day:day++,date:nextStudyDate()});
+    res.push({...topic,kind:"review",taskId,day:day++,date:nextStudyDate()});
+  });
   return res;
 }
 
-function toggle(day,type="topic"){
+function toggle(taskId,type="topic"){
   if(type!=="topic" && type!=="review") return;
-  const p=curPlan(), key=`${type}:${day}`;
+  const p=curPlan(), key=`${type}:${taskId}`;
   p.done[key]=!p.done[key]; save(); render();
 }
 
-function todayTask(item,type,label,description=""){
-  const done=isDone(curPlan(),type,item.day);
+function todayTask(item,label,description=""){
+  const done=isDone(curPlan(),item.kind,item.taskId);
   const accessible=description ? `${label}: ${description}` : label;
-  return `<button type="button" class="today-task${done?" done":""}" aria-pressed="${done}" aria-label="${escapeHTML(accessible)}" onclick="toggle(${item.day},'${type}')">
+  return `<button type="button" class="today-task${done?" done":""}" aria-pressed="${done}" aria-label="${escapeHTML(accessible)}" onclick="toggle(${item.taskId},'${item.kind}')">
     <span class="task-check" aria-hidden="true">${done?"✓":""}</span>
     <span class="task-info"><b>${escapeHTML(label)}</b>${description?`<span class="task-copy">${escapeHTML(description)}</span>`:""}</span>
   </button>`;
@@ -525,9 +529,10 @@ function render(){
   $("#heroTitle").textContent=SUBJECTS[subj].title;
   $("#heroSub").textContent=SUBJECTS[subj].sub;
   document.title=SUBJECTS[subj].title;
-  $("#countTarih").textContent=`${countTopics("tarih")} gün · ${countTopics("tarih")*2} görev`;
-  $("#countCog").textContent=`${countTopics("cografya")} gün · ${countTopics("cografya")*2} görev`;
-  $("#countVat").textContent=`${countTopics("vatandaslik")} gün · ${countTopics("vatandaslik")*2} görev`;
+  const tabInfo=sub=>`${countTopics(sub)*2} gün · ${countTopics(sub)} konu`;
+  $("#countTarih").textContent=tabInfo("tarih");
+  $("#countCog").textContent=tabInfo("cografya");
+  $("#countVat").textContent=tabInfo("vatandaslik");
   document.querySelectorAll(".subj").forEach(b=>{
     const active=b.dataset.subject===subj;
     b.classList.toggle("active",active); b.setAttribute("aria-selected",String(active));
@@ -539,45 +544,49 @@ function render(){
     b.classList.toggle("active",active); b.setAttribute("aria-pressed",String(active));
   });
   const sched=schedule(), map={}; sched.forEach(p=>map[p.date]=p);
-  const total=sched.length*2;
-  const done=sched.reduce((sum,p)=>sum+Number(isDone(plan,"topic",p.day))+Number(isDone(plan,"review",p.day)),0);
+  const total=sched.length;
+  const done=sched.reduce((sum,p)=>sum+Number(isDone(plan,p.kind,p.taskId)),0);
   $("#sTotal").textContent=total; $("#sDone").textContent=done;
   $("#sEnd").textContent=sched.length ? fmt(parse(sched[sched.length-1].date),{day:"numeric",month:"short",year:"numeric"}) : "-";
   const pct=total?Math.round(done/total*100):0;
   $("#sPct").textContent="%"+pct; $("#bar").style.width=pct+"%";
 
   const tp=map[todayIso];
-  const next=sched.find(p=>p.date>=todayIso && (!isDone(plan,"topic",p.day)||!isDone(plan,"review",p.day)))
-    || sched.find(p=>!isDone(plan,"topic",p.day)||!isDone(plan,"review",p.day));
+  const next=sched.find(p=>p.date>=todayIso && !isDone(plan,p.kind,p.taskId))
+    || sched.find(p=>!isDone(plan,p.kind,p.taskId));
+  const taskCard=item=>{
+    const isReview=item.kind==="review";
+    const label=isReview?REVIEW_TEXT:"Konu";
+    const desc=isReview?`Önceki konu: ${item.t}`:item.t;
+    return todayTask(item,label,desc);
+  };
   if(tp){
-    $("#todayCard").innerHTML=`<small>Bugünün görevleri · ${tp.day}. gün · ${escapeHTML(UNITS[tp.ui].name)}</small>
-      <div class="today-tasks">${todayTask(tp,"topic","Konu",tp.t)}${todayTask(tp,"review",REVIEW_TEXT)}</div>`;
+    $("#todayCard").innerHTML=`<small>Bugünün görevi · ${tp.day}. gün · ${escapeHTML(UNITS[tp.ui].name)}</small>
+      <div class="today-tasks single">${taskCard(tp)}</div>`;
   }else if(next){
     const when=next.date<todayIso?"Kaldığın yer":"Sıradaki çalışma";
     $("#todayCard").innerHTML=`<small>${when} · ${fmt(parse(next.date),{day:"numeric",month:"long"})} · ${next.day}. gün · ${escapeHTML(UNITS[next.ui].name)}</small>
-      <div class="today-tasks">${todayTask(next,"topic","Konu",next.t)}${todayTask(next,"review",REVIEW_TEXT)}</div>`;
+      <div class="today-tasks single">${taskCard(next)}</div>`;
   }else{
     $("#todayCard").innerHTML="<small>🎉 Bu dersin tüm görevleri tamamlandı!</small>";
   }
 
-  $("#legend").innerHTML=UNITS.map(u=>`<span><i style="background:${u.color}"></i>${escapeHTML(u.name)} (${u.topics.length})</span>`).join("");
+  $("#legend").innerHTML=UNITS.map(u=>`<span><i style="background:${u.color}"></i>${escapeHTML(u.name)} (${u.topics.length} konu · ${u.topics.length*2} gün)</span>`).join("");
   const v=$("#view");
   if(state.view==="list"){
     v.innerHTML=UNITS.map((u,ui)=>{
       const items=sched.filter(p=>p.ui===ui);
-      return `<section class="list"><div class="unit-h" style="background:${u.color}"><span>${escapeHTML(u.name)}</span><small>${items.length} gün · ${items.length*2} görev</small></div>`+
+      return `<section class="list"><div class="unit-h" style="background:${u.color}"><span>${escapeHTML(u.name)}</span><small>${u.topics.length} konu · ${items.length} gün</small></div>`+
         items.map(p=>{
-          const topicDone=isDone(plan,"topic",p.day), reviewDone=isDone(plan,"review",p.day);
+          const taskDone=isDone(plan,p.kind,p.taskId);
           const dayDate=escapeHTML(fmt(parse(p.date),{day:"numeric",month:"long",weekday:"short"}));
+          const isReview=p.kind==="review";
           return `<article class="day-group${p.date===todayIso?" today":""}">
             <div class="day-head"><span class="g">${p.day}. Gün</span><span class="dt">${dayDate}</span></div>
-            <label class="task-row${topicDone?" done":""}">
-              <input type="checkbox" ${topicDone?"checked":""} aria-label="${p.day}. gün konu görevini tamamla" onchange="toggle(${p.day},'topic')">
-              <span class="task-badge topic-badge">📘 Konu</span><span class="t">${escapeHTML(p.t)}</span>
-            </label>
-            <label class="task-row review-row${reviewDone?" done":""}">
-              <input type="checkbox" ${reviewDone?"checked":""} aria-label="${p.day}. gün Tekrar + Soru görevini tamamla" onchange="toggle(${p.day},'review')">
-              <span class="task-badge review-badge">🔁 ${REVIEW_TEXT}</span>
+            <label class="task-row${isReview?" review-row":""}${taskDone?" done":""}">
+              <input type="checkbox" ${taskDone?"checked":""} aria-label="${p.day}. gün ${isReview?'Tekrar + Soru':'konu'} görevini tamamla" onchange="toggle(${p.taskId},'${p.kind}')">
+              <span class="task-badge ${isReview?'review-badge':'topic-badge'}">${isReview?'🔁 '+REVIEW_TEXT:'📘 Konu'}</span>
+              <span class="t">${isReview?'Önceki konu: ':''}${escapeHTML(p.t)}</span>
             </label>
           </article>`;
         }).join("")+`</section>`;
@@ -585,6 +594,7 @@ function render(){
     return;
   }
 
+  if(!sched.length){ v.innerHTML=""; return; }
   const first=parse(sched[0].date), last=parse(sched[sched.length-1].date);
   let html="", m=new Date(first.getFullYear(),first.getMonth(),1);
   const dows=["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
@@ -599,16 +609,13 @@ function render(){
       const isToday=k===todayIso?" today":"";
       const dw=dows[(dt.getDay()+6)%7];
       if(p){
-        const unit=UNITS[p.ui];
-        const topicDone=isDone(plan,"topic",p.day), reviewDone=isDone(plan,"review",p.day);
-        const topicLabel=`${p.day}. gün konu görevi: ${p.t}`;
-        const reviewLabel=`${p.day}. gün Tekrar + Soru görevi`;
+        const unit=UNITS[p.ui], taskDone=isDone(plan,p.kind,p.taskId), isReview=p.kind==="review";
+        const label=isReview?REVIEW_TEXT:"Konu";
+        const copy=isReview?`Önceki konu: ${p.t}`:p.t;
+        const aria=`${p.day}. gün ${label} görevi: ${copy}`;
         html+=`<div class="cell${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span><span class="dn">${p.day}. gün</span></div>
-          <button type="button" class="calendar-task topic-task${topicDone?" done":""}" title="${escapeHTML(p.t)}" aria-label="${escapeHTML(topicLabel)}" aria-pressed="${topicDone}" onclick="toggle(${p.day},'topic')" style="--task-color:${unit.color};--task-bg:${unit.bg}">
-            <span class="task-check" aria-hidden="true">${topicDone?"✓":""}</span><span class="task-label">Konu</span><span class="task-copy">${escapeHTML(p.t)}</span>
-          </button>
-          <button type="button" class="calendar-task review-task${reviewDone?" done":""}" title="${REVIEW_TEXT}" aria-label="${escapeHTML(reviewLabel)}" aria-pressed="${reviewDone}" onclick="toggle(${p.day},'review')" style="--task-color:var(--accent);--task-bg:#f7f8fa">
-            <span class="task-check" aria-hidden="true">${reviewDone?"✓":""}</span><span class="task-label">${REVIEW_TEXT}</span>
+          <button type="button" class="calendar-task ${isReview?'review-task':'topic-task'}${taskDone?" done":""}" title="${escapeHTML(copy)}" aria-label="${escapeHTML(aria)}" aria-pressed="${taskDone}" onclick="toggle(${p.taskId},'${p.kind}')" style="--task-color:${isReview?'var(--accent)':unit.color};--task-bg:${isReview?'#f7f8fa':unit.bg}">
+            <span class="task-check" aria-hidden="true">${taskDone?"✓":""}</span><span class="task-label">${label}</span><span class="task-copy">${escapeHTML(copy)}</span>
           </button></div>`;
       }else if(inRange){
         html+=`<div class="cell off${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span></div><div class="offtxt">☕ Dinlenme</div></div>`;
