@@ -55,8 +55,7 @@
   body[data-subject="cografya"] .today-card{background:#f0faf8}
   body[data-subject="vatandaslik"] .today-card{background:#f5f2ff}
   .today-card small{color:var(--muted)}
-  .today-tasks{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
-  .today-tasks.single{grid-template-columns:1fr}
+  .today-tasks{display:grid;grid-template-columns:1fr;gap:9px;margin-top:10px}
   .today-task{display:flex;align-items:flex-start;gap:10px;text-align:left;width:100%;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:10px;color:var(--ink);font:inherit;cursor:pointer;transition:.15s}
   .today-task:hover{border-color:var(--accent);transform:translateY(-1px)}
   .today-task .task-check{flex:0 0 20px;width:20px;height:20px;border:1.5px solid #c9c1b4;border-radius:6px;display:grid;place-items:center;font-size:13px;color:#fff;background:#fff}
@@ -73,7 +72,7 @@
   .month h2{margin:0 0 12px;font-size:20px;text-transform:capitalize}
   .grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
   .dow{font-size:12px;color:var(--muted);text-align:center;font-weight:600;padding:4px 0}
-  .cell{min-height:166px;border:1px solid var(--line);border-radius:10px;padding:6px;background:#fff;display:flex;flex-direction:column;gap:5px;position:relative;min-width:0}
+  .cell{min-height:118px;border:1px solid var(--line);border-radius:10px;padding:6px;background:#fff;display:flex;flex-direction:column;gap:5px;position:relative;min-width:0}
   .cell.empty{background:transparent;border:none}
   .cell.off{background:repeating-linear-gradient(45deg,#faf8f4,#faf8f4 6px,#f3efe8 6px,#f3efe8 12px)}
   .cell.today{outline:2px solid var(--accent);outline-offset:1px}
@@ -87,6 +86,8 @@
   .calendar-task .task-label{font-weight:800;font-size:10px;color:var(--task-color,var(--accent))}
   .calendar-task .task-copy{grid-column:2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;color:#3f4652}
   .calendar-task.done .task-copy{text-decoration:line-through;color:var(--muted)}
+  .calendar-task.review-task{grid-template-rows:1fr;align-items:center}
+  .calendar-task.review-task .task-check{grid-row:1}
   .calendar-task.review-task.done .task-label{text-decoration:line-through;color:var(--muted)}
   .offtxt{font-size:11px;color:var(--muted);margin:auto;text-align:center}
 
@@ -99,7 +100,7 @@
   .day-group.today{background:#fff7f3}
   body[data-subject="cografya"] .day-group.today{background:#f0faf8}
   body[data-subject="vatandaslik"] .day-group.today{background:#f5f2ff}
-  .day-head{display:flex;align-items:center;gap:12px;padding:3px 0 5px}
+  .day-head{display:flex;align-items:center;gap:8px 12px;padding:3px 0 5px;flex-wrap:wrap}
   .day-head .g{font-weight:800;color:var(--muted);font-size:12px}
   .day-head .dt{font-size:12px;color:var(--muted)}
   .task-row{display:grid;grid-template-columns:24px 96px minmax(0,1fr);gap:9px;align-items:center;padding:6px 0;cursor:pointer}
@@ -127,9 +128,11 @@
     .calendar-task .task-check{grid-row:1/3;width:18px;height:18px;font-size:12px;border-radius:6px}
     .calendar-task .task-label{font-size:11px}
     .calendar-task .task-copy{-webkit-line-clamp:unset;overflow:visible;font-size:12px}
+    .calendar-task.review-task{grid-template-rows:auto;align-items:center}
+    .calendar-task.review-task .task-check{grid-row:1}
     .day-group{padding-left:12px;padding-right:12px}
     .task-row{grid-template-columns:20px 78px minmax(0,1fr);gap:7px}
-    .task-row.review-row{grid-template-columns:20px 78px minmax(0,1fr)}
+    .task-row.review-row{grid-template-columns:20px minmax(0,1fr)}
     .task-row .t{font-size:12px}
     .tabs{margin-left:0}
   }
@@ -150,6 +153,15 @@
     .task-row .t{font-size:12px}
     .unit-h{padding:11px 12px;font-size:13px}
   }
+  /* Konu / tekrar gun rozetleri */
+  .kind{font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;white-space:nowrap}
+  .kind.topic{border:1.5px solid var(--accent);color:var(--accent)}
+  .kind.review{background:#596579;color:#fff}
+  .day-group.review-day{background:#fafbfc}
+  body .day-group.review-day.today{background:#eef1f5}
+  .task-row.single{grid-template-columns:24px minmax(0,1fr)}
+  .cell.review-day{border-style:dashed}
+  .cell.review-day .num .dn{color:#596579}
   footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 0 40px}
   @media print{
     header{padding:16px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -167,7 +179,7 @@
 <header data-subject="tarih" id="hero">
   <div class="wrap">
     <h1 id="heroTitle">📜 KPSS Lisans Tarih Çalışma Takvimi</h1>
-    <p id="heroSub">Bir gün konu · Ertesi gün o konunun tekrarı + soru çözümü</p>
+    <p id="heroSub">Her konudan sonra 1 gün tekrar + soru · Sıralı KPSS lisans planı</p>
   </div>
 </header>
 
@@ -192,8 +204,8 @@
       </div>
     </div>
     <div class="stats">
-      <div class="stat"><b id="sTotal">0</b><span>Toplam görev</span></div>
-      <div class="stat"><b id="sDone">0</b><span>Tamamlanan görev</span></div>
+      <div class="stat"><b id="sTotal">0</b><span>Toplam gün</span></div>
+      <div class="stat"><b id="sDone">0</b><span>Tamamlanan gün</span></div>
       <div class="stat"><b id="sEnd">-</b><span>Bitiş tarihi</span></div>
       <div class="stat"><b id="sPct">%0</b><span>İlerleme</span></div>
     </div>
@@ -203,14 +215,14 @@
 
   <div class="legend" id="legend"></div>
   <main id="view"></main>
-  <footer>Plan sırası: Konu → ertesi çalışma günü aynı konunun Tekrar + Soru görevi → sonraki konu. Her dersin ilerlemesi ayrı saklanır.</footer>
+  <footer>İpucu: Her konu gününden sonra o konunun tekrar + soru günü gelir. Günleri tamamladıkça işaretle; her dersin ilerlemesi tarayıcında ayrı saklanır.</footer>
 </div>
 
 <script>
 const SUBJECTS = {
 tarih: {
   title: "📜 KPSS Lisans Tarih Çalışma Takvimi",
-  sub: "Bir gün konu · Ertesi gün o konunun tekrarı + soru çözümü · İlk Türklerden çağdaş tarihe",
+  sub: "1 gün konu + 1 gün tekrar ve soru · İlk Türklerden çağdaş tarihe sıralı plan",
   units: [
   {name:"İslamiyet Öncesi Türk Tarihi", color:"#8a5a2b", bg:"#f5ebe0", topics:[
     "Türklerin ana yurdu, göçler ve ilk kültür merkezleri (Anav, Afanasyevo, Andronovo, Karasuk, Tagar)",
@@ -296,7 +308,7 @@ tarih: {
 },
 cografya: {
   title: "🗺️ KPSS Lisans Coğrafya Çalışma Takvimi",
-  sub: "Bir gün konu · Ertesi gün o konunun tekrarı + soru çözümü · Türkiye coğrafyası",
+  sub: "1 gün konu + 1 gün tekrar ve soru · Haritadan Türkiye'nin bölgelerine sıralı plan",
   units: [
   {name:"Coğrafyanın Temelleri", color:"#1d4e89", bg:"#e2ecf8", topics:[
     "Coğrafyanın bölümleri, paralel ve meridyenler (matematik konum)",
@@ -357,7 +369,7 @@ cografya: {
 },
 vatandaslik: {
   title: "⚖️ KPSS Lisans Vatandaşlık Çalışma Takvimi",
-  sub: "Bir gün konu · Ertesi gün o konunun tekrarı + soru çözümü · Hukuktan idareye",
+  sub: "1 gün konu + 1 gün tekrar ve soru · Hukukun temellerinden idare hukukuna sıralı plan",
   units: [
     {name:"Hukukun Temel Kavramları", color:"#6852b8", bg:"#eee9ff", topics:[
       "Toplumsal düzen kuralları: hukuk, din, ahlak ve görgü kuralları; yaptırımlar",
@@ -434,10 +446,12 @@ vatandaslik: {
 };
 
 const $ = s=>document.querySelector(s);
-const LS_NEW = "kpssPlan_v3";
-const LS_PREV = "kpssPlan_v2";
+const LS_NEW = "kpssPlan_v4";
+const LS_PREV = "kpssPlan_v3";
+const LS_PREV2 = "kpssPlan_v2";
 const LS_OLD = "kpssTarihPlan_v1";
 const REVIEW_TEXT = "Tekrar + Soru";
+const reviewDesc = t=>`\u201C${t}\u201D \u2014 tekrar + soru \u00E7\u00F6z\u00FCm\u00FC`;
 const iso = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 const parse = s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
 const todayIso = iso(new Date());
@@ -452,8 +466,11 @@ function normalizePlan(plan){
   const oldDone=plan && plan.done && typeof plan.done==="object" ? plan.done : {};
   Object.entries(oldDone).forEach(([key,value])=>{
     if(!value) return;
-    if(/^(topic|review):\d+$/.test(key)) done[key]=true;
-    else if(/^\d+$/.test(key)) done[`topic:${key}`]=true;
+    let m;
+    if(/^day:\d+$/.test(key)) done[key]=true;
+    else if((m=key.match(/^topic:(\d+)$/))) done[`day:${2*Number(m[1])-1}`]=true;
+    else if((m=key.match(/^review:(\d+)$/))) done[`day:${2*Number(m[1])}`]=true;
+    else if(/^\d+$/.test(key)) done[`day:${2*Number(key)-1}`]=true;
   });
   const start=plan && /^\d{4}-\d{2}-\d{2}$/.test(plan.start||"") ? plan.start : todayIso;
   return {start,sunday:!!(plan && plan.sunday),done};
@@ -461,7 +478,7 @@ function normalizePlan(plan){
 
 function loadState(){
   let saved=null;
-  for(const key of [LS_NEW,LS_PREV]){
+  for(const key of [LS_NEW,LS_PREV,LS_PREV2]){
     try{
       const item=JSON.parse(localStorage.getItem(key));
       if(item && item.plans){ saved=item; break; }
@@ -488,37 +505,41 @@ let state=loadState();
 const save=()=>{try{localStorage.setItem(LS_NEW,JSON.stringify(state));}catch(e){}};
 const curPlan=()=>state.plans[state.subject];
 const curUnits=()=>SUBJECTS[state.subject].units;
-const isDone=(plan,type,day)=>!!plan.done[`${type}:${day}`];
+const isDone=(plan,day)=>!!plan.done[`day:${day}`];
 
+/* Program: 1 konu gunu + 1 tekrar/soru gunu, sirayla (konu -> tekrar -> yeni konu ...) */
 function schedule(){
   const topics=flatTopics(state.subject), plan=curPlan();
-  const res=[]; let d=parse(plan.start), day=1;
-  const nextStudyDate=()=>{
-    while(plan.sunday && d.getDay()===0) d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1);
-    const value=iso(d);
-    d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1);
-    return value;
-  };
-  topics.forEach((topic,index)=>{
-    const taskId=index+1;
-    res.push({...topic,kind:"topic",taskId,day:day++,date:nextStudyDate()});
-    res.push({...topic,kind:"review",taskId,day:day++,date:nextStudyDate()});
+  const days=[];
+  topics.forEach((tp,i)=>{
+    days.push({...tp,kind:"topic",topicIndex:i+1});
+    days.push({...tp,kind:"review",topicIndex:i+1});
   });
+  const res=[]; let d=parse(plan.start);
+  for(let i=0;i<days.length;){
+    if(!(plan.sunday && d.getDay()===0)){res.push({...days[i],day:i+1,date:iso(d)});i++;}
+    d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1);
+  }
   return res;
 }
 
-function toggle(taskId,type="topic"){
-  if(type!=="topic" && type!=="review") return;
-  const p=curPlan(), key=`${type}:${taskId}`;
+function toggle(day,type){
+  const p=curPlan();
+  let key;
+  if(type==="topic") key=`day:${2*Number(day)-1}`;
+  else if(type==="review") key=`day:${2*Number(day)}`;
+  else key=`day:${day}`;
   p.done[key]=!p.done[key]; save(); render();
 }
 
-function todayTask(item,label,description=""){
-  const done=isDone(curPlan(),item.kind,item.taskId);
-  const accessible=description ? `${label}: ${description}` : label;
-  return `<button type="button" class="today-task${done?" done":""}" aria-pressed="${done}" aria-label="${escapeHTML(accessible)}" onclick="toggle(${item.taskId},'${item.kind}')">
-    <span class="task-check" aria-hidden="true">${done?"✓":""}</span>
-    <span class="task-info"><b>${escapeHTML(label)}</b>${description?`<span class="task-copy">${escapeHTML(description)}</span>`:""}</span>
+function todayTask(item){
+  const done=isDone(curPlan(),item.day);
+  const isRev=item.kind==="review";
+  const label=isRev?`\uD83D\uDD01 ${REVIEW_TEXT}`:`\uD83D\uDCD8 ${item.topicIndex}. Konu`;
+  const desc=isRev?reviewDesc(item.t):item.t;
+  return `<button type="button" class="today-task${done?" done":""}" aria-pressed="${done}" aria-label="${escapeHTML(label+": "+desc)}" onclick="toggle(${item.day})">
+    <span class="task-check" aria-hidden="true">${done?"\u2713":""}</span>
+    <span class="task-info"><b>${escapeHTML(label)}</b><span class="task-copy">${escapeHTML(desc)}</span></span>
   </button>`;
 }
 
@@ -529,10 +550,10 @@ function render(){
   $("#heroTitle").textContent=SUBJECTS[subj].title;
   $("#heroSub").textContent=SUBJECTS[subj].sub;
   document.title=SUBJECTS[subj].title;
-  const tabInfo=sub=>`${countTopics(sub)*2} gün · ${countTopics(sub)} konu`;
-  $("#countTarih").textContent=tabInfo("tarih");
-  $("#countCog").textContent=tabInfo("cografya");
-  $("#countVat").textContent=tabInfo("vatandaslik");
+  const tabCount=s=>`${countTopics(s)} konu \u00B7 ${countTopics(s)*2} g\u00FCn`;
+  $("#countTarih").textContent=tabCount("tarih");
+  $("#countCog").textContent=tabCount("cografya");
+  $("#countVat").textContent=tabCount("vatandaslik");
   document.querySelectorAll(".subj").forEach(b=>{
     const active=b.dataset.subject===subj;
     b.classList.toggle("active",active); b.setAttribute("aria-selected",String(active));
@@ -545,48 +566,48 @@ function render(){
   });
   const sched=schedule(), map={}; sched.forEach(p=>map[p.date]=p);
   const total=sched.length;
-  const done=sched.reduce((sum,p)=>sum+Number(isDone(plan,p.kind,p.taskId)),0);
+  const done=sched.reduce((sum,p)=>sum+Number(isDone(plan,p.day)),0);
   $("#sTotal").textContent=total; $("#sDone").textContent=done;
   $("#sEnd").textContent=sched.length ? fmt(parse(sched[sched.length-1].date),{day:"numeric",month:"short",year:"numeric"}) : "-";
   const pct=total?Math.round(done/total*100):0;
   $("#sPct").textContent="%"+pct; $("#bar").style.width=pct+"%";
 
   const tp=map[todayIso];
-  const next=sched.find(p=>p.date>=todayIso && !isDone(plan,p.kind,p.taskId))
-    || sched.find(p=>!isDone(plan,p.kind,p.taskId));
-  const taskCard=item=>{
-    const isReview=item.kind==="review";
-    const label=isReview?REVIEW_TEXT:"Konu";
-    const desc=isReview?`Önceki konu: ${item.t}`:item.t;
-    return todayTask(item,label,desc);
-  };
+  const next=sched.find(p=>p.date>=todayIso && !isDone(plan,p.day))
+    || sched.find(p=>!isDone(plan,p.day));
+  const nextLine=p=>p.kind==="review"?`\uD83D\uDD01 ${REVIEW_TEXT} \u2014 ${p.t}`:`\uD83D\uDCD8 ${p.topicIndex}. Konu \u2014 ${p.t}`;
   if(tp){
-    $("#todayCard").innerHTML=`<small>Bugünün görevi · ${tp.day}. gün · ${escapeHTML(UNITS[tp.ui].name)}</small>
-      <div class="today-tasks single">${taskCard(tp)}</div>`;
+    const after=sched[sched.indexOf(tp)+1];
+    const afterTxt=after
+      ? `<p class="today-next">Sonraki (${after.day}. g\u00FCn): ${escapeHTML(nextLine(after))}</p>`
+      : `<p class="today-next">\uD83C\uDF89 Bu plan\u0131n son g\u00FCn\u00FC!</p>`;
+    const mine=tp.kind==="review"?`\uD83D\uDD01 ${REVIEW_TEXT}`:`\uD83D\uDCD8 ${tp.topicIndex}. Konu`;
+    $("#todayCard").innerHTML=`<small>Bug\u00FCn\u00FCn g\u00F6revi \u00B7 ${tp.day}. g\u00FCn \u00B7 ${escapeHTML(UNITS[tp.ui].name)} \u00B7 ${mine}</small>
+      <div class="today-tasks">${todayTask(tp)}</div>${afterTxt}`;
   }else if(next){
-    const when=next.date<todayIso?"Kaldığın yer":"Sıradaki çalışma";
-    $("#todayCard").innerHTML=`<small>${when} · ${fmt(parse(next.date),{day:"numeric",month:"long"})} · ${next.day}. gün · ${escapeHTML(UNITS[next.ui].name)}</small>
-      <div class="today-tasks single">${taskCard(next)}</div>`;
+    const when=next.date<todayIso?"Kald\u0131\u011F\u0131n yer":"S\u0131radaki \u00E7al\u0131\u015Fma";
+    $("#todayCard").innerHTML=`<small>${when} \u00B7 ${fmt(parse(next.date),{day:"numeric",month:"long"})} \u00B7 ${next.day}. g\u00FCn \u00B7 ${escapeHTML(UNITS[next.ui].name)}</small>
+      <div class="today-tasks">${todayTask(next)}</div>`;
   }else{
-    $("#todayCard").innerHTML="<small>🎉 Bu dersin tüm görevleri tamamlandı!</small>";
+    $("#todayCard").innerHTML="<small>\uD83C\uDF89 Bu dersin t\u00FCm g\u00FCnleri tamamland\u0131!</small>";
   }
 
-  $("#legend").innerHTML=UNITS.map(u=>`<span><i style="background:${u.color}"></i>${escapeHTML(u.name)} (${u.topics.length} konu · ${u.topics.length*2} gün)</span>`).join("");
+  $("#legend").innerHTML=`<span><i style="background:var(--accent)"></i>\uD83D\uDCD8 Konu g\u00FCn\u00FC</span><span><i style="background:#596579"></i>\uD83D\uDD01 Tekrar + Soru g\u00FCn\u00FC</span>`+UNITS.map(u=>`<span><i style="background:${u.color}"></i>${escapeHTML(u.name)} (${u.topics.length})</span>`).join("");
   const v=$("#view");
   if(state.view==="list"){
     v.innerHTML=UNITS.map((u,ui)=>{
       const items=sched.filter(p=>p.ui===ui);
-      return `<section class="list"><div class="unit-h" style="background:${u.color}"><span>${escapeHTML(u.name)}</span><small>${u.topics.length} konu · ${items.length} gün</small></div>`+
+      return `<section class="list"><div class="unit-h" style="background:${u.color}"><span>${escapeHTML(u.name)}</span><small>${items.length} g\u00FCn</small></div>`+
         items.map(p=>{
-          const taskDone=isDone(plan,p.kind,p.taskId);
+          const dn=isDone(plan,p.day), isRev=p.kind==="review";
           const dayDate=escapeHTML(fmt(parse(p.date),{day:"numeric",month:"long",weekday:"short"}));
-          const isReview=p.kind==="review";
-          return `<article class="day-group${p.date===todayIso?" today":""}">
-            <div class="day-head"><span class="g">${p.day}. Gün</span><span class="dt">${dayDate}</span></div>
-            <label class="task-row${isReview?" review-row":""}${taskDone?" done":""}">
-              <input type="checkbox" ${taskDone?"checked":""} aria-label="${p.day}. gün ${isReview?'Tekrar + Soru':'konu'} görevini tamamla" onchange="toggle(${p.taskId},'${p.kind}')">
-              <span class="task-badge ${isReview?'review-badge':'topic-badge'}">${isReview?'🔁 '+REVIEW_TEXT:'📘 Konu'}</span>
-              <span class="t">${isReview?'Önceki konu: ':''}${escapeHTML(p.t)}</span>
+          const pill=isRev?`<span class="kind review">\uD83D\uDD01 ${REVIEW_TEXT}</span>`:`<span class="kind topic">\uD83D\uDCD8 ${p.topicIndex}. Konu</span>`;
+          const text=isRev?reviewDesc(p.t):p.t;
+          return `<article class="day-group${isRev?" review-day":""}${p.date===todayIso?" today":""}">
+            <div class="day-head"><span class="g">${p.day}. G\u00FCn</span>${pill}<span class="dt">${dayDate}</span></div>
+            <label class="task-row single${dn?" done":""}">
+              <input type="checkbox" ${dn?"checked":""} aria-label="${p.day}. g\u00FCn g\u00F6revini tamamla" onchange="toggle(${p.day})">
+              <span class="t">${escapeHTML(text)}</span>
             </label>
           </article>`;
         }).join("")+`</section>`;
@@ -594,10 +615,9 @@ function render(){
     return;
   }
 
-  if(!sched.length){ v.innerHTML=""; return; }
   const first=parse(sched[0].date), last=parse(sched[sched.length-1].date);
   let html="", m=new Date(first.getFullYear(),first.getMonth(),1);
-  const dows=["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
+  const dows=["Pzt","Sal","\u00C7ar","Per","Cum","Cmt","Paz"];
   while(m<=last){
     const y=m.getFullYear(), mo=m.getMonth(), days=new Date(y,mo+1,0).getDate();
     const offset=(m.getDay()+6)%7;
@@ -609,16 +629,19 @@ function render(){
       const isToday=k===todayIso?" today":"";
       const dw=dows[(dt.getDay()+6)%7];
       if(p){
-        const unit=UNITS[p.ui], taskDone=isDone(plan,p.kind,p.taskId), isReview=p.kind==="review";
-        const label=isReview?REVIEW_TEXT:"Konu";
-        const copy=isReview?`Önceki konu: ${p.t}`:p.t;
-        const aria=`${p.day}. gün ${label} görevi: ${copy}`;
-        html+=`<div class="cell${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span><span class="dn">${p.day}. gün</span></div>
-          <button type="button" class="calendar-task ${isReview?'review-task':'topic-task'}${taskDone?" done":""}" title="${escapeHTML(copy)}" aria-label="${escapeHTML(aria)}" aria-pressed="${taskDone}" onclick="toggle(${p.taskId},'${p.kind}')" style="--task-color:${isReview?'var(--accent)':unit.color};--task-bg:${isReview?'#f7f8fa':unit.bg}">
-            <span class="task-check" aria-hidden="true">${taskDone?"✓":""}</span><span class="task-label">${label}</span><span class="task-copy">${escapeHTML(copy)}</span>
+        const unit=UNITS[p.ui];
+        const dn=isDone(plan,p.day), isRev=p.kind==="review";
+        const label=isRev?`\uD83D\uDD01 ${REVIEW_TEXT}`:`\uD83D\uDCD8 ${p.topicIndex}. Konu`;
+        const copy=isRev?reviewDesc(p.t):p.t;
+        const color=isRev?"#596579":unit.color;
+        const bg=isRev?"#eef1f5":unit.bg;
+        const ariaLabel=`${p.day}. g\u00FCn ${isRev?REVIEW_TEXT:"konu"} g\u00F6revi: ${p.t}`;
+        html+=`<div class="cell${isRev?" review-day":""}${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span><span class="dn">${p.day}. g\u00FCn</span></div>
+          <button type="button" class="calendar-task${dn?" done":""}" title="${escapeHTML(copy)}" aria-label="${escapeHTML(ariaLabel)}" aria-pressed="${dn}" onclick="toggle(${p.day})" style="--task-color:${color};--task-bg:${bg}">
+            <span class="task-check" aria-hidden="true">${dn?"\u2713":""}</span><span class="task-label">${escapeHTML(label)}</span><span class="task-copy">${escapeHTML(copy)}</span>
           </button></div>`;
       }else if(inRange){
-        html+=`<div class="cell off${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span></div><div class="offtxt">☕ Dinlenme</div></div>`;
+        html+=`<div class="cell off${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span></div><div class="offtxt">\u2615 Dinlenme</div></div>`;
       }else{
         html+=`<div class="cell dim${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span></div></div>`;
       }
@@ -634,8 +657,8 @@ $("#start").addEventListener("change",e=>{if(e.target.value){curPlan().start=e.t
 $("#sunday").addEventListener("change",e=>{curPlan().sunday=e.target.checked;save();render();});
 $("#todayBtn").onclick=()=>{curPlan().start=todayIso;save();render();};
 $("#reset").onclick=()=>{
-  const names={tarih:"Tarih",cografya:"Coğrafya",vatandaslik:"Vatandaşlık"}, name=names[state.subject];
-  if(confirm(`${name} ilerlemesi sıfırlansın mı?`)){curPlan().done={};save();render();}
+  const names={tarih:"Tarih",cografya:"Co\u011Frafya",vatandaslik:"Vatanda\u015Fl\u0131k"}, name=names[state.subject];
+  if(confirm(`${name} ilerlemesi s\u0131f\u0131rlans\u0131n m\u0131?`)){curPlan().done={};save();render();}
 };
 document.querySelectorAll(".tabs .btn").forEach(b=>b.onclick=()=>{state.view=b.dataset.view;save();render();});
 render();
