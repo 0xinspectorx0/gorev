@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KPSS Lisans Ders Çalışma Takvimi</title>
+<style>
+  :root{
+    --bg:#f6f3ee; --card:#fff; --ink:#1f2430; --muted:#6b7280; --line:#e7e1d7;
+    --accent:#b4432c; --ok:#2f8f5b;
+  }
+  body[data-subject="cografya"]{ --accent:#0f766e; }
+  body[data-subject="vatandaslik"]{ --accent:#6852b8; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:linear-gradient(135deg,#7a2418,#b4432c 60%,#d9774a);color:#fff;padding:32px 20px 70px;transition:background .3s}
+  header[data-subject="cografya"]{background:linear-gradient(135deg,#083f3b,#0f766e 55%,#14b8a6)}
+  header[data-subject="vatandaslik"]{background:linear-gradient(135deg,#35245f,#6852b8 55%,#9b8bd9)}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+  header h1{margin:0 0 6px;font-size:clamp(24px,4vw,36px);letter-spacing:-.5px}
+  header p{margin:0;opacity:.9}
+  .panel{background:var(--card);border-radius:16px;box-shadow:0 10px 30px rgba(60,30,10,.08);padding:20px;margin-top:-50px;position:relative}
+  /* subject tabs */
+  .subj-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:18px}
+  .subj{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border-radius:12px;border:2px solid var(--line);background:#faf8f4;cursor:pointer;font:inherit;font-weight:700;font-size:16px;color:var(--ink);transition:.2s}
+  .subj small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+  .subj .txt{text-align:center}
+  .subj[data-subject="tarih"].active{background:#b4432c;border-color:#b4432c;color:#fff}
+  .subj[data-subject="tarih"].active small{color:#ffe4dc}
+  .subj[data-subject="cografya"].active{background:#0f766e;border-color:#0f766e;color:#fff}
+  .subj[data-subject="cografya"].active small{color:#d3f5ef}
+  .subj[data-subject="vatandaslik"].active{background:#6852b8;border-color:#6852b8;color:#fff}
+  .subj[data-subject="vatandaslik"].active small{color:#ebe7ff}
+  .subj:not(.active):hover{border-color:var(--ink)}
+  .controls{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
+  .controls label{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+  .controls input[type=date]{padding:9px 10px;border:1px solid var(--line);border-radius:10px;font:inherit}
+  .chk{flex-direction:row!important;align-items:center;gap:8px!important;color:var(--ink)!important;font-size:14px!important;padding-bottom:10px}
+  .btn{padding:10px 14px;border:1px solid var(--line);background:#fff;border-radius:10px;cursor:pointer;font:inherit;font-size:14px}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn.primary:hover{filter:brightness(.92);color:#fff}
+  .tabs{display:flex;gap:6px;margin-left:auto}
+  .tabs .btn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:18px}
+  .stat{background:#faf8f4;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .stat b{display:block;font-size:22px}
+  .stat span{font-size:12px;color:var(--muted)}
+  .bar{height:10px;background:#efe9df;border-radius:99px;overflow:hidden;margin-top:14px}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ok),#5cc08a);width:0;transition:width .4s}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 8px}
+  .legend span{font-size:12px;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);padding:5px 10px;border-radius:99px}
+  .legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .today-card{margin-top:18px;border-left:5px solid var(--accent);background:#fff7f3;padding:14px 16px;border-radius:10px}
+  body[data-subject="cografya"] .today-card{background:#f0faf8}
+  body[data-subject="vatandaslik"] .today-card{background:#f5f2ff}
+  .today-card small{color:var(--muted)}
+  .today-tasks{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+  .today-task{display:flex;align-items:flex-start;gap:10px;text-align:left;width:100%;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:10px;color:var(--ink);font:inherit;cursor:pointer;transition:.15s}
+  .today-task:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .today-task .task-check{flex:0 0 20px;width:20px;height:20px;border:1.5px solid #c9c1b4;border-radius:6px;display:grid;place-items:center;font-size:13px;color:#fff;background:#fff}
+  .today-task.done .task-check{background:var(--ok);border-color:var(--ok)}
+  .today-task .task-info{min-width:0;display:grid;gap:3px}
+  .today-task b{font-size:12px;color:var(--accent)}
+  .today-task .task-copy{font-size:13px;line-height:1.35}
+  .today-task.done .task-copy{text-decoration:line-through;color:var(--muted)}
+  .today-task.done .task-info b{text-decoration:line-through;color:var(--muted)}
+  .today-next{margin:5px 0 0;font-size:13px;color:var(--muted)}
+
+  /* Calendar */
+  .month{background:var(--card);border-radius:16px;padding:18px;margin:18px 0;box-shadow:0 4px 16px rgba(60,30,10,.05)}
+  .month h2{margin:0 0 12px;font-size:20px;text-transform:capitalize}
+  .grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+  .dow{font-size:12px;color:var(--muted);text-align:center;font-weight:600;padding:4px 0}
+  .cell{min-height:166px;border:1px solid var(--line);border-radius:10px;padding:6px;background:#fff;display:flex;flex-direction:column;gap:5px;position:relative;min-width:0}
+  .cell.empty{background:transparent;border:none}
+  .cell.off{background:repeating-linear-gradient(45deg,#faf8f4,#faf8f4 6px,#f3efe8 6px,#f3efe8 12px)}
+  .cell.today{outline:2px solid var(--accent);outline-offset:1px}
+  .cell.dim{opacity:.4}
+  .cell .num{font-size:12px;font-weight:700;color:var(--muted);display:flex;justify-content:space-between;align-items:center;min-height:17px}
+  .cell .num .dw{display:none}
+  .calendar-task{width:100%;min-width:0;flex:1;display:grid;grid-template-columns:16px minmax(0,1fr);grid-template-rows:auto 1fr;gap:2px 5px;text-align:left;border:1px solid #e5e7eb;border-left:4px solid var(--task-color,var(--accent));border-radius:8px;padding:5px 6px;background:var(--task-bg,#f7f8fa);color:var(--ink);font:inherit;font-size:10px;line-height:1.25;cursor:pointer;transition:.15s}
+  .calendar-task:hover{filter:brightness(.96)}
+  .calendar-task .task-check{grid-row:1/3;width:15px;height:15px;border:1.5px solid #bbb4a8;border-radius:5px;display:grid;place-items:center;font-size:10px;color:#fff;background:#fff}
+  .calendar-task.done .task-check{background:var(--ok);border-color:var(--ok)}
+  .calendar-task .task-label{font-weight:800;font-size:10px;color:var(--task-color,var(--accent))}
+  .calendar-task .task-copy{grid-column:2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;color:#3f4652}
+  .calendar-task.done .task-copy{text-decoration:line-through;color:var(--muted)}
+  .calendar-task.review-task{grid-template-rows:1fr;align-items:center}
+  .calendar-task.review-task .task-check{grid-row:1}
+  .calendar-task.review-task.done .task-label{text-decoration:line-through;color:var(--muted)}
+  .offtxt{font-size:11px;color:var(--muted);margin:auto;text-align:center}
+
+  /* List */
+  .list{background:var(--card);border-radius:16px;margin:18px 0;overflow:hidden;box-shadow:0 4px 16px rgba(60,30,10,.05)}
+  .unit-h{padding:12px 18px;font-weight:700;font-size:15px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .unit-h small{font-size:12px;font-weight:500;opacity:.85}
+  .day-group{padding:7px 18px 9px;border-bottom:1px solid var(--line)}
+  .day-group:last-child{border-bottom:0}
+  .day-group.today{background:#fff7f3}
+  body[data-subject="cografya"] .day-group.today{background:#f0faf8}
+  body[data-subject="vatandaslik"] .day-group.today{background:#f5f2ff}
+  .day-head{display:flex;align-items:center;gap:12px;padding:3px 0 5px}
+  .day-head .g{font-weight:800;color:var(--muted);font-size:12px}
+  .day-head .dt{font-size:12px;color:var(--muted)}
+  .task-row{display:grid;grid-template-columns:24px 96px minmax(0,1fr);gap:9px;align-items:center;padding:6px 0;cursor:pointer}
+  .task-row input{width:17px;height:17px;margin:0;accent-color:var(--ok);cursor:pointer}
+  .task-row .task-badge{font-size:11px;font-weight:800;white-space:nowrap}
+  .task-row.review-row{grid-template-columns:24px minmax(0,1fr)}
+  .topic-badge{color:var(--accent)}
+  .review-badge{color:#596579}
+  .task-row .t{font-size:13px;line-height:1.4}
+  .task-row.done .t{text-decoration:line-through;color:var(--muted)}
+  .task-row.review-row.done .task-badge{text-decoration:line-through;color:var(--muted)}
+  @media(max-width:760px){
+    .subj-tabs{grid-template-columns:1fr}
+    /* Takvim mobilde tek sütun liste görünümüne döner; masaüstü tablo yapısı bozulmaz */
+    .grid{display:flex;flex-direction:column;gap:8px}
+    .grid .dow{display:none}
+    .cell.empty,.cell.dim{display:none}
+    .cell{display:grid;grid-template-columns:62px minmax(0,1fr);grid-template-rows:auto auto;gap:6px 10px;min-height:0;padding:10px}
+    .cell .num{grid-column:1;grid-row:1/3;flex-direction:column;justify-content:center;align-items:center;gap:1px;min-height:0;border-right:1px solid var(--line);padding-right:8px}
+    .cell .num .d{font-size:18px;font-weight:800;color:var(--ink)}
+    .cell .num .dw{display:block;font-size:11px;font-weight:600;color:var(--muted)}
+    .cell .num .dn{font-size:10px;font-weight:700;color:var(--accent)}
+    .cell.off .offtxt{grid-column:2;grid-row:1/3;margin:0;display:flex;align-items:center;font-size:12px}
+    .calendar-task{grid-column:2;font-size:12px;line-height:1.35;padding:8px 10px;grid-template-columns:18px minmax(0,1fr);grid-template-rows:auto auto;gap:2px 8px;align-content:center}
+    .calendar-task .task-check{grid-row:1/3;width:18px;height:18px;font-size:12px;border-radius:6px}
+    .calendar-task .task-label{font-size:11px}
+    .calendar-task .task-copy{-webkit-line-clamp:unset;overflow:visible;font-size:12px}
+    .calendar-task.review-task{grid-template-rows:auto;align-items:center}
+    .calendar-task.review-task .task-check{grid-row:1}
+    .day-group{padding-left:12px;padding-right:12px}
+    .task-row{grid-template-columns:20px 78px minmax(0,1fr);gap:7px}
+    .task-row.review-row{grid-template-columns:20px minmax(0,1fr)}
+    .task-row .t{font-size:12px}
+    .tabs{margin-left:0}
+  }
+  @media(max-width:540px){
+    .today-tasks{grid-template-columns:1fr}
+    .month{padding:12px}
+    .month h2{font-size:16px}
+    .grid{gap:6px}
+    .cell{grid-template-columns:54px minmax(0,1fr);padding:9px;gap:5px 8px}
+    .cell .num .d{font-size:16px}
+    .cell .num .dw{font-size:10px}
+    .calendar-task{font-size:11px;padding:7px 9px;gap:2px 7px}
+    .calendar-task .task-check{width:17px;height:17px}
+    .calendar-task .task-copy{font-size:11px}
+    .day-group{padding:7px 10px}
+    .task-row{grid-template-columns:20px 68px minmax(0,1fr);gap:5px}
+    .task-row .task-badge{font-size:10px}
+    .task-row .t{font-size:12px}
+    .unit-h{padding:11px 12px;font-size:13px}
+  }
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 0 40px}
+  @media print{
+    header{padding:16px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    header[data-subject="tarih"]{background:#7a2418!important}
+    header[data-subject="cografya"]{background:#083f3b!important}
+    header[data-subject="vatandaslik"]{background:#35245f!important}
+    .controls,.tabs,.subj-tabs{display:none}
+    .panel{margin-top:0;box-shadow:none}
+    .month{page-break-inside:avoid;box-shadow:none}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body data-subject="tarih">
+<header data-subject="tarih" id="hero">
+  <div class="wrap">
+    <h1 id="heroTitle">📜 KPSS Lisans Tarih Çalışma Takvimi</h1>
+    <p id="heroSub">Her çalışma gününde 1 konu + 1 tekrar görevi · Sıralı KPSS lisans planı</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="panel">
+    <div class="subj-tabs" role="tablist" aria-label="Ders seçimi">
+      <button class="subj active" type="button" role="tab" aria-selected="true" data-subject="tarih"><span style="font-size:24px">📜</span><span class="txt">Tarih<small id="countTarih"></small></span></button>
+      <button class="subj" type="button" role="tab" aria-selected="false" data-subject="cografya"><span style="font-size:24px">🗺️</span><span class="txt">Coğrafya<small id="countCog"></small></span></button>
+      <button class="subj" type="button" role="tab" aria-selected="false" data-subject="vatandaslik"><span style="font-size:24px">⚖️</span><span class="txt">Vatandaşlık<small id="countVat"></small></span></button>
+    </div>
+    <div class="controls">
+      <label>Başlangıç tarihi
+        <input type="date" id="start">
+      </label>
+      <label class="chk"><input type="checkbox" id="sunday"> Pazar günleri dinlenme</label>
+      <button class="btn" id="todayBtn">Bugünden başlat</button>
+      <button class="btn" id="reset">İlerlemeyi sıfırla</button>
+      <button class="btn primary" onclick="window.print()">🖨️ Yazdır</button>
+      <div class="tabs">
+        <button class="btn active" data-view="cal">Takvim</button>
+        <button class="btn" data-view="list">Liste</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="sTotal">0</b><span>Toplam görev</span></div>
+      <div class="stat"><b id="sDone">0</b><span>Tamamlanan görev</span></div>
+      <div class="stat"><b id="sEnd">-</b><span>Bitiş tarihi</span></div>
+      <div class="stat"><b id="sPct">%0</b><span>İlerleme</span></div>
+    </div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="today-card" id="todayCard"></div>
+  </section>
+
+  <div class="legend" id="legend"></div>
+  <main id="view"></main>
+  <footer>İpucu: Konu ve tekrar görevlerini ayrı ayrı tamamlandı olarak işaretleyebilirsin. Her dersin ilerlemesi tarayıcında ayrı saklanır.</footer>
+</div>
+
+<script>
+const SUBJECTS = {
+tarih: {
+  title: "📜 KPSS Lisans Tarih Çalışma Takvimi",
+  sub: "Her çalışma gününde 1 konu + 1 tekrar görevi · İlk Türklerden çağdaş tarihe sıralı plan",
+  units: [
+  {name:"İslamiyet Öncesi Türk Tarihi", color:"#8a5a2b", bg:"#f5ebe0", topics:[
+    "Türklerin ana yurdu, göçler ve ilk kültür merkezleri (Anav, Afanasyevo, Andronovo, Karasuk, Tagar)",
+    "Asya Hun Devleti (Teoman, Mete Han, onlu sistem)",
+    "Avrupa Hun Devleti ve Ak Hunlar (Kavimler Göçü, Attila)",
+    "I. Kök Türk Devleti (Bumin Kağan, İstemi Yabgu)",
+    "II. Kök Türk (Kutluk) Devleti ve Orhun Yazıtları",
+    "Uygur Devleti (yerleşik hayat, Maniheizm)",
+    "Diğer Türk toplulukları (Avar, Hazar, Bulgar, Peçenek, Kuman, Macar, Türgiş, Karluk, Kırgız)",
+    "İslamiyet öncesi Türk kültürü I: Devlet yönetimi, kut anlayışı, kurultay, ordu",
+    "İslamiyet öncesi Türk kültürü II: Din, sosyal-ekonomik hayat, yazı, sanat, edebiyat"
+  ]},
+  {name:"İlk Türk-İslam Devletleri", color:"#2d6a4f", bg:"#e3f1ea", topics:[
+    "İslamiyet'in doğuşu ve Dört Halife Dönemi",
+    "Emeviler, Abbasiler ve Türklerin İslamiyet'e geçişi (Talas Savaşı)",
+    "Karahanlılar, Tolunoğulları ve İhşidiler",
+    "Gazneliler (Gazneli Mahmut, Hint seferleri)",
+    "Büyük Selçuklu Devleti (Dandanakan, Pasinler, Malazgirt, Katvan)",
+    "Türk-İslam devletleri kültür ve medeniyeti (Nizamiye, ikta, Divan-ı Saltanat)"
+  ]},
+  {name:"Türkiye Selçuklu Tarihi", color:"#1d4e89", bg:"#e2ecf8", topics:[
+    "I. Beylikler Dönemi (Saltuklu, Danişmendli, Mengücekli, Artuklu, Çaka) ve Haçlı Seferleri",
+    "Türkiye Selçuklu Devleti kuruluşu: Süleyman Şah'tan Miryokefalon'a",
+    "Türkiye Selçuklu yükselişi, Kösedağ ve Moğol hakimiyeti; Harzemşahlar, Eyyubiler, Memlükler",
+    "Türkiye Selçuklu kültür ve medeniyeti (Ahilik, ticaret, kervansaraylar, mimari)"
+  ]},
+  {name:"Osmanlı Siyasi Tarihi", color:"#b4432c", bg:"#fbe7e1", topics:[
+    "II. Beylikler Dönemi ve Osmanlı'nın kuruluşu (Osman Bey, Orhan Bey)",
+    "I. Murat ve Yıldırım Bayezid dönemi, Ankara Savaşı",
+    "Fetret Devri, Çelebi Mehmet ve II. Murat dönemi",
+    "Fatih Sultan Mehmet ve İstanbul'un Fethi",
+    "II. Bayezid ve Yavuz Sultan Selim dönemi",
+    "Kanuni Sultan Süleyman dönemi ve Osmanlı denizciliği",
+    "Avrupa'da yeni çağ: Coğrafi Keşifler, Rönesans ve Reform",
+    "17. yüzyıl Duraklama: iç isyanlar ve ıslahatçılar",
+    "17. yüzyıl dış politika: Zitvatorok, Kasr-ı Şirin, II. Viyana, Karlofça",
+    "18. yüzyıl Gerileme: Lale Devri ve ıslahatlar",
+    "18. yüzyıl dış politika: Prut, Pasarofça, Belgrad, Küçük Kaynarca, Yaş",
+    "Avrupa'da gelişmeler: Aydınlanma, Fransız İhtilali, Sanayi İnkılabı",
+    "19. yüzyıl: III. Selim, II. Mahmut ıslahatları ve Sened-i İttifak",
+    "19. yüzyıl isyanlar: Sırp, Yunan, Mehmet Ali Paşa ve Boğazlar Meselesi",
+    "Tanzimat ve Islahat Fermanları, Kırım Savaşı, Paris Antlaşması",
+    "I. Meşrutiyet, 93 Harbi, Ayastefanos ve Berlin Antlaşmaları",
+    "Osmanlı'da fikir akımları (Osmanlıcılık, İslamcılık, Türkçülük, Batıcılık)"
+  ]},
+  {name:"Osmanlı Kültür ve Medeniyeti", color:"#7b3fa0", bg:"#f0e6f7", topics:[
+    "Osmanlı merkez teşkilatı: padişah, Divan-ı Hümayun, saray (Enderun-Birun)",
+    "Taşra teşkilatı, toprak sistemi (tımar, iltizam, malikane) ve ordu",
+    "Osmanlı toplum yapısı, ekonomi, hukuk, eğitim, bilim ve sanat"
+  ]},
+  {name:"20. Yüzyıl Başlarında Osmanlı", color:"#c77d0a", bg:"#fbf0d9", topics:[
+    "II. Meşrutiyet, 31 Mart Vakası ve Trablusgarp Savaşı",
+    "Balkan Savaşları ve sonuçları",
+    "I. Dünya Savaşı: nedenleri ve Osmanlı cepheleri",
+    "I. Dünya Savaşı sonu: gizli antlaşmalar, Mondros, Paris Barış Konferansı"
+  ]},
+  {name:"Kurtuluş Savaşı", color:"#c1121f", bg:"#fde2e4", topics:[
+    "Cemiyetler (yararlı-zararlı) ve işgaller",
+    "Mustafa Kemal'in Samsun'a çıkışı, Havza ve Amasya Genelgeleri",
+    "Erzurum ve Sivas Kongreleri, Amasya Görüşmeleri",
+    "Son Osmanlı Mebusan Meclisi, Misak-ı Milli ve TBMM'nin açılışı",
+    "TBMM'ye karşı isyanlar ve alınan tedbirler, Sevr Antlaşması",
+    "Doğu ve Güney Cepheleri (Gümrü, Moskova, Kars, Ankara Antlaşmaları)",
+    "Batı Cephesi: düzenli ordu, I. ve II. İnönü Savaşları",
+    "Kütahya-Eskişehir, Sakarya Meydan Muharebesi ve Büyük Taarruz",
+    "Mudanya Ateşkesi, saltanatın kaldırılması ve Lozan Barış Antlaşması"
+  ]},
+  {name:"Atatürk İlke ve İnkılapları", color:"#0f766e", bg:"#dcf3f0", topics:[
+    "Siyasi alanda inkılaplar (Cumhuriyet'in ilanı, halifeliğin kaldırılması, anayasalar)",
+    "Hukuk, eğitim ve kültür alanında inkılaplar",
+    "Toplumsal ve ekonomik alanda inkılaplar (İzmir İktisat Kongresi, kılık-kıyafet, Soyadı)",
+    "Atatürk dönemi iç politika: çok partili hayat denemeleri ve isyanlar",
+    "Atatürk ilkeleri (Cumhuriyetçilik, Milliyetçilik, Halkçılık, Devletçilik, Laiklik, İnkılapçılık)"
+  ]},
+  {name:"Dış Politika ve Çağdaş Tarih", color:"#334155", bg:"#e6eaf0", topics:[
+    "Atatürk dönemi dış politika I: Musul, nüfus mübadelesi, Milletler Cemiyeti",
+    "Atatürk dönemi dış politika II: Balkan Antantı, Montrö, Sadabat Paktı, Hatay",
+    "İki savaş arası dönem ve II. Dünya Savaşı'nda Türkiye",
+    "Soğuk Savaş dönemi ve Türkiye (NATO, Kore, Kıbrıs)",
+    "Yumuşama dönemi, Soğuk Savaş sonrası ve küreselleşen dünyada Türkiye"
+  ]}
+  ]
+},
+cografya: {
+  title: "🗺️ KPSS Lisans Coğrafya Çalışma Takvimi",
+  sub: "Her çalışma gününde 1 konu + 1 tekrar görevi · Haritadan Türkiye'nin bölgelerine sıralı plan",
+  units: [
+  {name:"Coğrafyanın Temelleri", color:"#1d4e89", bg:"#e2ecf8", topics:[
+    "Coğrafyanın bölümleri, paralel ve meridyenler (matematik konum)",
+    "Türkiye'nin matematik ve özel konumu ve sonuçları",
+    "Harita bilgisi I: ölçek hesapları, harita türleri ve projeksiyonlar",
+    "Harita bilgisi II: izohipsler, profil çıkarma, eğim ve yükselti hesapları",
+    "Dünyanın şekli ve günlük hareketinin sonuçları (gece-gündüz, Coriolis, saat farkları)",
+    "Yıllık hareket, eksen eğikliği ve özel tarihler (21 Mart – 21 Haziran – 23 Eylül – 21 Aralık)"
+  ]},
+  {name:"İklim Bilgisi", color:"#0284c7", bg:"#e0f2fe", topics:[
+    "Sıcaklık: etkileyen faktörler, izotermler ve sıcaklık dağılışı",
+    "Basınç kuşakları, sürekli rüzgarlar (Alize, Batı, Kutup) ve musonlar",
+    "Yerel rüzgarlar (meltem, fön, mistral) ve nem-yağış oluşum şekilleri",
+    "Dünya iklim tipleri: Ekvatoral, muson, çöl, Akdeniz, okyanusal, karasal, kutup",
+    "Türkiye'de sıcaklık, basınç ve rüzgarlar",
+    "Türkiye'de yağış dağılışı ve iklim tipleri (Karadeniz, Akdeniz, karasal)"
+  ]},
+  {name:"Yer Şekilleri ve Sular", color:"#2d6a4f", bg:"#e3f1ea", topics:[
+    "İç kuvvetler: orojenez, epirojenez, volkanizma ve depremler",
+    "Dış kuvvetler I: akarsu şekilleri (vadi, menderes, taraça, delta, peribacası)",
+    "Dış kuvvetler II: rüzgar ve buzul şekilleri (barkan, moren, sirk, hörgüç kaya)",
+    "Dış kuvvetler III: karst topoğrafyası (lapya, dolin, polye, mağara) ve kütle hareketleri",
+    "Türkiye'nin dağları (kıvrım-kırık-volkanik) ve ovaları (tektonik, delta, karstik)",
+    "Türkiye'nin platoları, vadileri ve kıyı tipleri (ria, dalmaçya, falez, tombolo)",
+    "Toprak tipleri (zonal-azonal-intrazonal) ve erozyonla mücadele",
+    "Bitki örtüsü: orman, maki, bozkır ve Türkiye'nin bitki toplulukları",
+    "Türkiye'nin akarsuları ve gölleri (tektonik, volkanik, karstik, set gölleri)",
+    "Denizler, yeraltı suları, barajlar ve doğal afetler (deprem, heyelan, sel, çığ)"
+  ]},
+  {name:"Beşeri Coğrafya", color:"#c77d0a", bg:"#fbf0d9", topics:[
+    "Nüfusun dağılışı, yoğunluğu (aritmetik-tarımsal-fizyolojik) ve sayımlar",
+    "Nüfus piramitleri, nüfus artış hızı ve demografik dönüşüm",
+    "Göçler (iç-dış, mevsimlik), şehirleşme ve gecekondu",
+    "Yerleşme tipleri (köy-kasaba-şehir) ve Türkiye'de nüfus-yerleşme"
+  ]},
+  {name:"Ekonomik Coğrafya", color:"#b4432c", bg:"#fbe7e1", topics:[
+    "Tarım I: tahıllar (buğday, arpa, mısır, pirinç, yulaf-çavdar)",
+    "Tarım II: sanayi bitkileri (pamuk, tütün, şeker pancarı, ayçiçeği, haşhaş)",
+    "Tarım III: baklagiller, meyvecilik, bağcılık, sebzecilik ve seracılık",
+    "Hayvancılık (büyükbaş-küçükbaş, kümes, arıcılık, ipekböceği) ve balıkçılık",
+    "Madenler I: demir, bakır, krom, boksit, manganez, kurşun-çinko",
+    "Madenler II: bor, tuz, mermer, linyit-taşkömürü ve çıkarım alanları",
+    "Enerji: petrol-doğalgaz, HES-termik-jeotermal, rüzgar-güneş-biyokütle",
+    "Sanayi kolları ve dağılışı (demir-çelik, dokuma, gıda, otomotiv, petrokimya)",
+    "Ulaşım: kara-demir-deniz-hava yolları, geçitler, köprüler, limanlar",
+    "Ticaret, turizm (kış-yayla-inanç-sağlık) ve hizmet sektörü"
+  ]},
+  {name:"Bölgeler Coğrafyası", color:"#7b3fa0", bg:"#f0e6f7", topics:[
+    "Marmara Bölgesi: nüfus, sanayi, tarım ve turizm",
+    "Ege Bölgesi: tarım, jeotermal, turizm ve sanayi",
+    "Akdeniz Bölgesi: turizm, tarım (narenciye-sera), Teke-Taşeli",
+    "İç Anadolu Bölgesi: tahıl, Tuz Gölü, sanayi ve yer şekilleri",
+    "Karadeniz Bölgesi: iklim, fındık-çay, heyelan ve yaylacılık",
+    "Doğu Anadolu Bölgesi: hayvancılık, volkanik set gölleri, seyrek nüfus",
+    "Güneydoğu Anadolu Bölgesi: GAP, petrol, kuraklık ve tarım"
+  ]}
+  ]
+},
+vatandaslik: {
+  title: "⚖️ KPSS Lisans Vatandaşlık Çalışma Takvimi",
+  sub: "Her çalışma gününde 1 konu + 1 tekrar görevi · Hukukun temellerinden idare hukukuna sıralı plan",
+  units: [
+    {name:"Hukukun Temel Kavramları", color:"#6852b8", bg:"#eee9ff", topics:[
+      "Toplumsal düzen kuralları: hukuk, din, ahlak ve görgü kuralları; yaptırımlar",
+      "Hukukun kaynakları: yazılı ve yazısız kaynaklar, kanunlar hiyerarşisi",
+      "Hukuk kurallarının türleri ve yorum yöntemleri",
+      "Kamu hukuku ve özel hukuk ayrımı; hukuk dalları",
+      "Hukuk kurallarının yer, zaman ve anlam bakımından uygulanması",
+      "Hak kavramı, hakların türleri ve korunma yolları",
+      "Kişi türleri, kişilik, ehliyet ve tüzel kişiler",
+      "Hukuki olay, hukuki işlem, sorumluluk ve zamanaşımı kavramları"
+    ]},
+    {name:"Anayasa Tarihi ve Temel İlkeler", color:"#9b5b37", bg:"#f7ece4", topics:[
+      "1876 Kanun-ı Esasi ve 1909 değişiklikleri",
+      "1921 Teşkilât-ı Esasiye Kanunu ve millî egemenlik",
+      "1924 Anayasası: temel özellikler ve değişiklikler",
+      "1961 Anayasası: temel özellikler, kurumlar ve hak anlayışı",
+      "1982 Anayasası: hazırlanışı, yapısı ve temel nitelikleri",
+      "Devlet şekilleri, hükümet sistemleri ve kuvvetler ayrılığı",
+      "Cumhuriyetin nitelikleri ve değiştirilemeyecek hükümler"
+    ]},
+    {name:"Temel Haklar ve Ödevler", color:"#0f766e", bg:"#e0f4f0", topics:[
+      "Temel hak ve özgürlüklerin özellikleri ve sınıflandırılması",
+      "Kişinin hakları ve ödevleri: kişi dokunulmazlığı, özel hayat ve düşünce özgürlüğü",
+      "Sosyal ve ekonomik haklar: eğitim, çalışma, sağlık ve sosyal güvenlik",
+      "Siyasi haklar ve ödevler: seçme-seçilme, vatandaşlık ve dilekçe hakları",
+      "Temel hakların sınırlanması, kötüye kullanılamaması ve durdurulması",
+      "Olağanüstü hâllerde hak ve özgürlüklerin kullanılması",
+      "Anayasal başvuru yolları ve bireysel başvuru kavramı"
+    ]},
+    {name:"Yasama", color:"#c77d0a", bg:"#fbf0d9", topics:[
+      "TBMM'nin oluşumu, milletvekili seçilme yeterliliği ve seçim dönemi",
+      "Milletvekillerinin hukuki statüsü, yasama sorumsuzluğu ve dokunulmazlığı",
+      "TBMM'nin görev ve yetkileri; kanun yapma ve kanunların görüşülmesi",
+      "Bütçe ve kesin hesap kanunu, para basılması ve savaş ilanı yetkileri",
+      "Meclis çalışmaları, komisyonlar, toplantı ve karar yeter sayıları",
+      "Milletvekilliğinin sona ermesi ve TBMM seçimlerinin yenilenmesi",
+      "Siyasi partiler, seçim ilkeleri ve seçimlerin denetimi"
+    ]},
+    {name:"Yürütme", color:"#b4432c", bg:"#fbe7e1", topics:[
+      "Cumhurbaşkanının seçimi, görev süresi ve adaylık şartları",
+      "Cumhurbaşkanının görev ve yetkileri; yürütme yetkisinin kullanılması",
+      "Cumhurbaşkanlığı kararnameleri, yönetmelikler ve normlar hiyerarşisi",
+      "Cumhurbaşkanı yardımcıları ve bakanların atanması, görevleri ve sorumluluğu",
+      "Olağanüstü hâl ilanı, süresi ve TBMM denetimi",
+      "Millî Güvenlik Kurulu ve yürütmeye bağlı temel kurumlar"
+    ]},
+    {name:"Yargı", color:"#334155", bg:"#e6eaf0", topics:[
+      "Yargı bağımsızlığı, mahkemelerin kuruluşu ve yargı kolları",
+      "Anayasa Mahkemesi: kuruluşu, görevleri ve norm denetimi",
+      "Anayasa Mahkemesine bireysel başvuru ve siyasi parti denetimi",
+      "Yargıtay, Danıştay ve uyuşmazlık yargısının görevleri",
+      "Hâkimler ve Savcılar Kurulu: yapısı ve görevleri",
+      "Sayıştay, hesap yargısı ve kamu denetimi",
+      "Yüksek Seçim Kurulu ve seçim uyuşmazlıklarının çözümü"
+    ]},
+    {name:"İdare Hukuku ve Yönetim", color:"#1d4e89", bg:"#e2ecf8", topics:[
+      "İdarenin bütünlüğü, merkezden yönetim ve yerinden yönetim ilkeleri",
+      "Merkezî yönetim teşkilatı: başkent ve taşra kuruluşları",
+      "İl ve ilçe yönetimi; vali ve kaymakamın görevleri",
+      "Mahallî idareler: belediye, il özel idaresi ve köy yönetimi",
+      "Kamu hizmeti, kamu malları ve idari kolluk faaliyetleri",
+      "Kamu görevlileri: statü, haklar, yükümlülükler ve disiplin",
+      "İdari işlemler, idari sözleşmeler ve idarenin takdir yetkisi",
+      "İdarenin mali ve hukuki sorumluluğu; tam yargı davası",
+      "İdari yargı düzeni, iptal davası ve idari başvuru yolları"
+    ]},
+    {name:"Uluslararası Kuruluşlar ve Genel Tekrar", color:"#7b3fa0", bg:"#f0e6f7", topics:[
+      "Birleşmiş Milletler, Avrupa Konseyi ve Avrupa İnsan Hakları sistemi",
+      "NATO, Avrupa Birliği, OECD, UNESCO ve diğer uluslararası kuruluşlar",
+      "Vatandaşlık konuları genel tekrar: anayasal kurumlar ve soru çözümü"
+    ]}
+  ]
+}
+};
+
+const $ = s=>document.querySelector(s);
+const LS_NEW = "kpssPlan_v3";
+const LS_PREV = "kpssPlan_v2";
+const LS_OLD = "kpssTarihPlan_v1";
+const REVIEW_TEXT = "Tekrar + Soru";
+const iso = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const parse = s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const todayIso = iso(new Date());
+const fmt = (d,o)=>d.toLocaleDateString("tr-TR",o);
+const escapeHTML = value=>String(value).replace(/[&<>\x22\x27]/g,ch=>{if(ch==='&')return '&amp;';if(ch==='<')return '&lt;';if(ch==='>')return '&gt;';return ch.charCodeAt(0)===34?'&quot;':'&#39;';});
+
+function countTopics(sub){ return SUBJECTS[sub].units.reduce((a,u)=>a+u.topics.length,0); }
+function flatTopics(sub){ const a=[]; SUBJECTS[sub].units.forEach((u,ui)=>u.topics.forEach(t=>a.push({t,ui}))); return a; }
+
+function normalizePlan(plan){
+  const done={};
+  const oldDone=plan && plan.done && typeof plan.done==="object" ? plan.done : {};
+  Object.entries(oldDone).forEach(([key,value])=>{
+    if(!value) return;
+    if(/^(topic|review):\d+$/.test(key)) done[key]=true;
+    else if(/^\d+$/.test(key)) done[`topic:${key}`]=true;
+  });
+  const start=plan && /^\d{4}-\d{2}-\d{2}$/.test(plan.start||"") ? plan.start : todayIso;
+  return {start,sunday:!!(plan && plan.sunday),done};
+}
+
+function loadState(){
+  let saved=null;
+  for(const key of [LS_NEW,LS_PREV]){
+    try{
+      const item=JSON.parse(localStorage.getItem(key));
+      if(item && item.plans){ saved=item; break; }
+    }catch(e){}
+  }
+  const result={subject:"tarih",view:"cal",plans:{}};
+  if(saved){
+    result.subject=SUBJECTS[saved.subject] ? saved.subject : "tarih";
+    result.view=saved.view==="list" ? "list" : "cal";
+    Object.keys(SUBJECTS).forEach(sub=>result.plans[sub]=normalizePlan(saved.plans[sub]));
+  }else{
+    Object.keys(SUBJECTS).forEach(sub=>result.plans[sub]=normalizePlan(null));
+    try{
+      const old=JSON.parse(localStorage.getItem(LS_OLD));
+      if(old){
+        result.plans.tarih=normalizePlan(old);
+        result.view=old.view==="list" ? "list" : "cal";
+      }
+    }catch(e){}
+  }
+  return result;
+}
+let state=loadState();
+const save=()=>{try{localStorage.setItem(LS_NEW,JSON.stringify(state));}catch(e){}};
+const curPlan=()=>state.plans[state.subject];
+const curUnits=()=>SUBJECTS[state.subject].units;
+const isDone=(plan,type,day)=>!!plan.done[`${type}:${day}`];
+
+function schedule(){
+  const topics=flatTopics(state.subject), plan=curPlan();
+  const res=[]; let d=parse(plan.start);
+  for(let i=0;i<topics.length;){
+    if(!(plan.sunday && d.getDay()===0)){res.push({...topics[i],day:i+1,date:iso(d)});i++;}
+    d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1);
+  }
+  return res;
+}
+
+function toggle(day,type="topic"){
+  if(type!=="topic" && type!=="review") return;
+  const p=curPlan(), key=`${type}:${day}`;
+  p.done[key]=!p.done[key]; save(); render();
+}
+
+function todayTask(item,type,label,description=""){
+  const done=isDone(curPlan(),type,item.day);
+  const accessible=description ? `${label}: ${description}` : label;
+  return `<button type="button" class="today-task${done?" done":""}" aria-pressed="${done}" aria-label="${escapeHTML(accessible)}" onclick="toggle(${item.day},'${type}')">
+    <span class="task-check" aria-hidden="true">${done?"✓":""}</span>
+    <span class="task-info"><b>${escapeHTML(label)}</b>${description?`<span class="task-copy">${escapeHTML(description)}</span>`:""}</span>
+  </button>`;
+}
+
+function render(){
+  const subj=state.subject, plan=curPlan(), UNITS=curUnits();
+  document.body.dataset.subject=subj;
+  $("#hero").dataset.subject=subj;
+  $("#heroTitle").textContent=SUBJECTS[subj].title;
+  $("#heroSub").textContent=SUBJECTS[subj].sub;
+  document.title=SUBJECTS[subj].title;
+  $("#countTarih").textContent=`${countTopics("tarih")} gün · ${countTopics("tarih")*2} görev`;
+  $("#countCog").textContent=`${countTopics("cografya")} gün · ${countTopics("cografya")*2} görev`;
+  $("#countVat").textContent=`${countTopics("vatandaslik")} gün · ${countTopics("vatandaslik")*2} görev`;
+  document.querySelectorAll(".subj").forEach(b=>{
+    const active=b.dataset.subject===subj;
+    b.classList.toggle("active",active); b.setAttribute("aria-selected",String(active));
+  });
+
+  $("#start").value=plan.start; $("#sunday").checked=plan.sunday;
+  document.querySelectorAll(".tabs .btn").forEach(b=>{
+    const active=b.dataset.view===state.view;
+    b.classList.toggle("active",active); b.setAttribute("aria-pressed",String(active));
+  });
+  const sched=schedule(), map={}; sched.forEach(p=>map[p.date]=p);
+  const total=sched.length*2;
+  const done=sched.reduce((sum,p)=>sum+Number(isDone(plan,"topic",p.day))+Number(isDone(plan,"review",p.day)),0);
+  $("#sTotal").textContent=total; $("#sDone").textContent=done;
+  $("#sEnd").textContent=sched.length ? fmt(parse(sched[sched.length-1].date),{day:"numeric",month:"short",year:"numeric"}) : "-";
+  const pct=total?Math.round(done/total*100):0;
+  $("#sPct").textContent="%"+pct; $("#bar").style.width=pct+"%";
+
+  const tp=map[todayIso];
+  const next=sched.find(p=>p.date>=todayIso && (!isDone(plan,"topic",p.day)||!isDone(plan,"review",p.day)))
+    || sched.find(p=>!isDone(plan,"topic",p.day)||!isDone(plan,"review",p.day));
+  if(tp){
+    $("#todayCard").innerHTML=`<small>Bugünün görevleri · ${tp.day}. gün · ${escapeHTML(UNITS[tp.ui].name)}</small>
+      <div class="today-tasks">${todayTask(tp,"topic","Konu",tp.t)}${todayTask(tp,"review",REVIEW_TEXT)}</div>`;
+  }else if(next){
+    const when=next.date<todayIso?"Kaldığın yer":"Sıradaki çalışma";
+    $("#todayCard").innerHTML=`<small>${when} · ${fmt(parse(next.date),{day:"numeric",month:"long"})} · ${next.day}. gün · ${escapeHTML(UNITS[next.ui].name)}</small>
+      <div class="today-tasks">${todayTask(next,"topic","Konu",next.t)}${todayTask(next,"review",REVIEW_TEXT)}</div>`;
+  }else{
+    $("#todayCard").innerHTML="<small>🎉 Bu dersin tüm görevleri tamamlandı!</small>";
+  }
+
+  $("#legend").innerHTML=UNITS.map(u=>`<span><i style="background:${u.color}"></i>${escapeHTML(u.name)} (${u.topics.length})</span>`).join("");
+  const v=$("#view");
+  if(state.view==="list"){
+    v.innerHTML=UNITS.map((u,ui)=>{
+      const items=sched.filter(p=>p.ui===ui);
+      return `<section class="list"><div class="unit-h" style="background:${u.color}"><span>${escapeHTML(u.name)}</span><small>${items.length} gün · ${items.length*2} görev</small></div>`+
+        items.map(p=>{
+          const topicDone=isDone(plan,"topic",p.day), reviewDone=isDone(plan,"review",p.day);
+          const dayDate=escapeHTML(fmt(parse(p.date),{day:"numeric",month:"long",weekday:"short"}));
+          return `<article class="day-group${p.date===todayIso?" today":""}">
+            <div class="day-head"><span class="g">${p.day}. Gün</span><span class="dt">${dayDate}</span></div>
+            <label class="task-row${topicDone?" done":""}">
+              <input type="checkbox" ${topicDone?"checked":""} aria-label="${p.day}. gün konu görevini tamamla" onchange="toggle(${p.day},'topic')">
+              <span class="task-badge topic-badge">📘 Konu</span><span class="t">${escapeHTML(p.t)}</span>
+            </label>
+            <label class="task-row review-row${reviewDone?" done":""}">
+              <input type="checkbox" ${reviewDone?"checked":""} aria-label="${p.day}. gün Tekrar + Soru görevini tamamla" onchange="toggle(${p.day},'review')">
+              <span class="task-badge review-badge">🔁 ${REVIEW_TEXT}</span>
+            </label>
+          </article>`;
+        }).join("")+`</section>`;
+    }).join("");
+    return;
+  }
+
+  const first=parse(sched[0].date), last=parse(sched[sched.length-1].date);
+  let html="", m=new Date(first.getFullYear(),first.getMonth(),1);
+  const dows=["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
+  while(m<=last){
+    const y=m.getFullYear(), mo=m.getMonth(), days=new Date(y,mo+1,0).getDate();
+    const offset=(m.getDay()+6)%7;
+    html+=`<section class="month"><h2>${fmt(m,{month:"long",year:"numeric"})}</h2><div class="grid">`+dows.map(d=>`<div class="dow">${d}</div>`).join("");
+    for(let i=0;i<offset;i++) html+=`<div class="cell empty"></div>`;
+    for(let d=1;d<=days;d++){
+      const dt=new Date(y,mo,d), k=iso(dt), p=map[k];
+      const inRange=dt>=first && dt<=last;
+      const isToday=k===todayIso?" today":"";
+      const dw=dows[(dt.getDay()+6)%7];
+      if(p){
+        const unit=UNITS[p.ui];
+        const topicDone=isDone(plan,"topic",p.day), reviewDone=isDone(plan,"review",p.day);
+        const topicLabel=`${p.day}. gün konu görevi: ${p.t}`;
+        const reviewLabel=`${p.day}. gün Tekrar + Soru görevi`;
+        html+=`<div class="cell${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span><span class="dn">${p.day}. gün</span></div>
+          <button type="button" class="calendar-task topic-task${topicDone?" done":""}" title="${escapeHTML(p.t)}" aria-label="${escapeHTML(topicLabel)}" aria-pressed="${topicDone}" onclick="toggle(${p.day},'topic')" style="--task-color:${unit.color};--task-bg:${unit.bg}">
+            <span class="task-check" aria-hidden="true">${topicDone?"✓":""}</span><span class="task-label">Konu</span><span class="task-copy">${escapeHTML(p.t)}</span>
+          </button>
+          <button type="button" class="calendar-task review-task${reviewDone?" done":""}" title="${REVIEW_TEXT}" aria-label="${escapeHTML(reviewLabel)}" aria-pressed="${reviewDone}" onclick="toggle(${p.day},'review')" style="--task-color:var(--accent);--task-bg:#f7f8fa">
+            <span class="task-check" aria-hidden="true">${reviewDone?"✓":""}</span><span class="task-label">${REVIEW_TEXT}</span>
+          </button></div>`;
+      }else if(inRange){
+        html+=`<div class="cell off${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span></div><div class="offtxt">☕ Dinlenme</div></div>`;
+      }else{
+        html+=`<div class="cell dim${isToday}"><div class="num"><span class="d">${d}</span><span class="dw">${dw}</span></div></div>`;
+      }
+    }
+    html+=`</div></section>`;
+    m=new Date(y,mo+1,1);
+  }
+  v.innerHTML=html;
+}
+
+document.querySelectorAll(".subj").forEach(b=>b.onclick=()=>{state.subject=b.dataset.subject;save();render();});
+$("#start").addEventListener("change",e=>{if(e.target.value){curPlan().start=e.target.value;save();render();}});
+$("#sunday").addEventListener("change",e=>{curPlan().sunday=e.target.checked;save();render();});
+$("#todayBtn").onclick=()=>{curPlan().start=todayIso;save();render();};
+$("#reset").onclick=()=>{
+  const names={tarih:"Tarih",cografya:"Coğrafya",vatandaslik:"Vatandaşlık"}, name=names[state.subject];
+  if(confirm(`${name} ilerlemesi sıfırlansın mı?`)){curPlan().done={};save();render();}
+};
+document.querySelectorAll(".tabs .btn").forEach(b=>b.onclick=()=>{state.view=b.dataset.view;save();render();});
+render();
+</script>
+</body>
+</html>

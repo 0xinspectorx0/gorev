@@ -1,0 +1,17 @@
+# İşletim sistemi / editör
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# Loglar
+*.log
+npm-debug.log*
+
+# Geçici dosyalar
+*.tmp
+.cache/
+dist/
+node_modules/
